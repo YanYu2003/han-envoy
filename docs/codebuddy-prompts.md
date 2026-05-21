@@ -31,21 +31,21 @@
 
 ---
 
-## Phase 1（预留）
+## Phase 1（已完成）
 
-### 目标：核心玩法框架
+### 目标：静态可玩原型
 
-**待开发的 Prompt 占位：**
+**Prompt 标题：实现 Phase 1 静态可玩原型**
 
-> **即将编写——期待内容：**
-> - 实现外交参数系统（GameState + 硬规则引擎）
-> - 实现场景引擎（场景/事件状态机）
-> - 实现角色系统（原型数据 + UI 组件）
-> - 实现消息日志系统
-> - 实现预设选项 UI
-> - 实现自由输入 UI（基础版·暂无 AI）
-> - 实现 Mock AI Provider
-> - 实现至少 1 个可玩的完整场景流程
+**输出：**
+- Zustand 状态管理 (`src/store/gameStore.ts`)
+- 完整类型定义 (`src/game/types.ts`)
+- 角色数据系统 (`src/game/characters.ts`，5 个角色)
+- 场景数据系统 (`src/game/scenes.ts`，4 个场景)
+- 结局数据系统 (`src/game/endings.ts`，5 个结局)
+- 简单规则引擎 (`src/game/simpleRules.ts`)
+- 游戏 UI 组件（StartScreen, CourtScreen, EndingScreen, CharacterPanel, StatPanel, ChoicePanel, HistoryLog）
+- 可玩的完整流程：开始 → 朝堂 4 场景 → 结局
 
 ---
 
