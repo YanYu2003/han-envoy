@@ -90,7 +90,31 @@
 
 ---
 
-## Phase 3（预留）
+## Phase 3（已完成）
+
+### 目标：Mock AI + 自由输入 + 角色反应
+
+**Prompt 标题：实现 Phase 3 Mock AI + 自由输入 + 角色反应**
+
+**输出：**
+- **新增文件：**
+  - `src/ai/types.ts` — AIProvider 接口（PlayerActionAnalysis, CharacterReaction, AIContext）
+  - `src/ai/mockAiProvider.ts` — MockAIProvider（关键词匹配 13 种 intent + 20+ 角色反应模板）
+  - `src/ai/analysisToEffects.ts` — AI 分析 → 规则效果映射（含 tone/riskLevel 修正）
+  - `src/components/FreeInputBox.tsx` — 自由输入文本框 UI
+  - `src/components/ReactionPanel.tsx` — AI 解析结果 + 角色反应展示面板
+- **修改文件：**
+  - `src/game/types.ts` — 新增 AIInteractionLogEntry, GameState.aiLog
+  - `src/store/gameStore.ts` — 重构：抽取 resolveTurn 公共结算管线；新增 makeFreeInput 异步 action
+  - `src/components/CourtScreen.tsx` — 集成 FreeInputBox + ReactionPanel
+  - `docs/ai-agent-design.md` — 新增 Phase 3 Mock AI 章节
+  - `docs/codebuddy-prompts.md` — 记录本阶段
+  - `docs/acceptance-checklist.md` — 追加 Phase 3 验收清单
+- **不变：** Phase 2 规则系统、条件选项、动态叙事、结局系统全部保留
+
+---
+
+## Phase 4（预留）
 
 ### 目标：完整第一章
 

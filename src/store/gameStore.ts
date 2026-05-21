@@ -5,6 +5,7 @@ import type {
   Choice,
   GameStats,
   EventLogEntry,
+  AIInteractionLogEntry,
 } from "../game/types";
 import { INITIAL_STATS } from "../game/initialState";
 import { SCENES, STARTING_SCENE_ID } from "../game/scenes";
@@ -15,6 +16,9 @@ import {
   applyThresholdEvents,
 } from "../game/thresholdEvents";
 import { getEndingTriggerReason } from "../game/endings";
+import { resolveCrisisEnding, resolveAssassinationEnding } from "../game/scenes";
+import { mockAIProvider } from "../ai/mockAiProvider";
+import { analysisToEffects } from "../ai/analysisToEffects";
 
 /* ================================================================
  * Store 类型
@@ -23,6 +27,7 @@ import { getEndingTriggerReason } from "../game/endings";
 interface GameActions {
   startGame: () => void;
   makeChoice: (choiceId: string) => void;
+  makeFreeInput: (input: string) => Promise<void>;
   restart: () => void;
 }
 
@@ -43,6 +48,7 @@ function createInitialState(): GameState {
     triggeredEvents: [],
     endingId: undefined,
     endingTriggerReason: undefined,
+    aiLog: [],
   };
 }
 
@@ -72,6 +78,83 @@ function computeDelta(
 }
 
 /* ================================================================
+ * 公共结算管线（纯数据，不调用 set）
+ * ================================================================ */
+
+interface TurnInput {
+  effects: Partial<GameStats>;
+  label: string;
+  resultText: string;
+  sceneTitle: string;
+  endingIdOverride?: string;
+  resolveEndingFn?: (stats: GameStats, turn: number) => string | null;
+  nextSceneId?: string;
+}
+
+interface TurnOutput {
+  newStats: GameStats;
+  entry: HistoryEntry;
+  newEventLog: EventLogEntry[];
+  newTriggeredIds: string[];
+  resolvedEndingId: string | undefined;
+}
+
+function resolveTurn(
+  state: GameState,
+  input: TurnInput
+): TurnOutput {
+  let newStats = applyEffects(state.stats, input.effects);
+
+  const chainResult = resolveChainReactions(newStats);
+  newStats = chainResult.stats;
+
+  const newEvents = checkThresholdEvents(newStats, state.triggeredEvents);
+  const eventResult = applyThresholdEvents(newStats, newEvents);
+  newStats = eventResult.stats;
+  const newTriggeredIds = [
+    ...state.triggeredEvents,
+    ...newEvents.map((e) => e.id),
+  ];
+
+  const delta = computeDelta(state.stats, newStats);
+  const statSummary = formatStatChanges(delta);
+  const entry: HistoryEntry = {
+    turn: state.turn,
+    sceneTitle: input.sceneTitle,
+    choiceLabel: input.label,
+    resultText: input.resultText,
+    statChangesSummary: statSummary || "无显著变化",
+  };
+
+  const newEventLog: EventLogEntry[] = [
+    ...state.eventLog,
+    ...eventResult.logs.map((log) => ({
+      turn: state.turn,
+      eventTitle: "",
+      description: log,
+      statChangesSummary: "",
+    })),
+  ];
+  for (const desc of chainResult.changes) {
+    newEventLog.push({
+      turn: state.turn,
+      eventTitle: "连锁反应",
+      description: desc,
+      statChangesSummary: "",
+    });
+  }
+
+  let resolvedEndingId: string | undefined;
+  if (input.endingIdOverride) {
+    resolvedEndingId = input.endingIdOverride;
+  } else if (input.resolveEndingFn) {
+    resolvedEndingId = input.resolveEndingFn(newStats, state.turn) ?? undefined;
+  }
+
+  return { newStats, entry, newEventLog, newTriggeredIds, resolvedEndingId };
+}
+
+/* ================================================================
  * Store
  * ================================================================ */
 
@@ -92,6 +175,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       triggeredEvents: [],
       endingId: undefined,
       endingTriggerReason: undefined,
+      aiLog: [],
     });
   },
 
@@ -105,109 +189,89 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const choice = findChoice(state.currentSceneId, choiceId);
     if (!choice) return;
 
-    // ---- Phase 2: 条件检查 ----
-    if (choice.condition && !choice.condition(state.stats)) {
-      return; // 不应到达此处（UI 已禁用按钮）
+    if (choice.condition && !choice.condition(state.stats)) return;
+
+    const output = resolveTurn(state, {
+      effects: choice.effects,
+      label: choice.label,
+      resultText: choice.resultText,
+      sceneTitle: scene.title,
+      endingIdOverride: choice.endingId,
+      resolveEndingFn: choice.resolveEnding,
+    });
+
+    applyTurnOutcome(state, output, choice.nextSceneId);
+  },
+
+  makeFreeInput: async (input: string) => {
+    const state = get();
+    if (state.phase !== "court") return;
+
+    const scene = SCENES[state.currentSceneId];
+    if (!scene) return;
+
+    // 1) Mock AI 解析
+    const context = {
+      sceneId: state.currentSceneId,
+      sceneTitle: scene.title,
+      stats: state.stats,
+      recentHistory: state.history.slice(-3),
+    };
+    const analysis = await mockAIProvider.parsePlayerInput(input, context);
+
+    // 2) 分析 → 规则效果
+    const effects = analysisToEffects(analysis);
+
+    // 3) 结果文本
+    const isUnclear = analysis.intent === "unclear";
+    const resultText = isUnclear
+      ? "通译迟疑片刻，似乎未能理解你的意思。请换一种更明确的说法。"
+      : `你开口说道：「${input.length > 40 ? input.slice(0, 40) + "…" : input}」`;
+
+    // 4) 判定结局逻辑
+    let resolveEndingFn: ((stats: GameStats, turn: number) => string | null) | undefined;
+    let nextSceneId: string | undefined;
+
+    if (analysis.intent === "assassinate") {
+      resolveEndingFn = resolveAssassinationEnding;
+    } else if (state.currentSceneId === "crisis_point") {
+      resolveEndingFn = resolveCrisisEnding;
+    } else {
+      // 正常推进到下一场景
+      const sceneIds = Object.keys(SCENES);
+      const currentIdx = sceneIds.indexOf(state.currentSceneId);
+      nextSceneId =
+        currentIdx >= 0 && currentIdx < sceneIds.length - 1
+          ? sceneIds[currentIdx + 1]
+          : undefined;
     }
 
-    // ---- 1) 应用选择效果 ----
-    let newStats = applyEffects(state.stats, choice.effects);
-
-    // ---- 2) Phase 2: 连锁反应 ----
-    const chainResult = resolveChainReactions(newStats);
-    newStats = chainResult.stats;
-
-    // ---- 3) Phase 2: 阈值事件检查 ----
-    const newEvents = checkThresholdEvents(newStats, state.triggeredEvents);
-    const eventResult = applyThresholdEvents(newStats, newEvents);
-    newStats = eventResult.stats;
-    const newTriggeredIds = [
-      ...state.triggeredEvents,
-      ...newEvents.map((e) => e.id),
-    ];
-
-    // ---- 4) 记录历史 ----
-    const choiceDelta = computeDelta(state.stats, newStats);
-    const statSummary = formatStatChanges(choiceDelta);
-
-    const entry: HistoryEntry = {
-      turn: state.turn,
+    // 5) 执行结算管线
+    const output = resolveTurn(state, {
+      effects,
+      label: `自由输入：${analysis.shortSummary}`,
+      resultText,
       sceneTitle: scene.title,
-      choiceLabel: choice.label,
-      resultText: choice.resultText,
-      statChangesSummary: statSummary || "无显著变化",
+      resolveEndingFn,
+    });
+
+    // 6) 角色反应
+    const reactions = await mockAIProvider.generateCharacterReactions(
+      analysis,
+      context
+    );
+
+    // 7) 记录 AI 日志
+    const aiEntry: AIInteractionLogEntry = {
+      turn: state.turn,
+      input,
+      analysis,
+      reactions,
     };
 
-    // ---- 5) 记录事件日志 ----
-    const newEventLog: EventLogEntry[] = [
-      ...state.eventLog,
-      ...eventResult.logs.map((log) => ({
-        turn: state.turn,
-        eventTitle: "",
-        description: log,
-        statChangesSummary: "",
-      })),
-    ];
-
-    // 如果有连锁反应变化，追加到日志
-    if (chainResult.changes.length > 0) {
-      for (const desc of chainResult.changes) {
-        newEventLog.push({
-          turn: state.turn,
-          eventTitle: "连锁反应",
-          description: desc,
-          statChangesSummary: "",
-        });
-      }
-    }
-
-    // ---- 6) 判定结局 ----
-    let endingId: string | undefined;
-
-    if (choice.endingId) {
-      endingId = choice.endingId;
-    } else if (choice.resolveEnding) {
-      const resolved = choice.resolveEnding(newStats, state.turn);
-      if (resolved) endingId = resolved;
-    }
-
-    // ---- 7) 触发结局 ----
-    if (endingId) {
-      const triggerReason = getEndingTriggerReason(endingId, newStats);
-      set({
-        stats: newStats,
-        history: [...state.history, entry],
-        eventLog: newEventLog,
-        triggeredEvents: newTriggeredIds,
-        phase: "ending",
-        endingId,
-        endingTriggerReason: triggerReason,
-      });
-      return;
-    }
-
-    // ---- 8) 正常推进 ----
-    const nextSceneId = choice.nextSceneId;
-    if (!nextSceneId) {
-      set({
-        stats: newStats,
-        history: [...state.history, entry],
-        eventLog: newEventLog,
-        triggeredEvents: newTriggeredIds,
-        phase: "ending",
-        endingId: "expelled",
-        endingTriggerReason: getEndingTriggerReason("expelled", newStats),
-      });
-      return;
-    }
-
-    set({
-      stats: newStats,
-      history: [...state.history, entry],
-      eventLog: newEventLog,
-      triggeredEvents: newTriggeredIds,
-      currentSceneId: nextSceneId,
-      turn: state.turn + 1,
+    // 8) 应用结果（含 AI 日志）
+    applyTurnOutcome(state, output, nextSceneId, {
+      aiLog: [...state.aiLog, aiEntry],
     });
   },
 
@@ -215,3 +279,51 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(createInitialState());
   },
 }));
+
+/* ================================================================
+ * 应用结算结果到 store
+ * ================================================================ */
+
+function applyTurnOutcome(
+  state: GameState,
+  output: TurnOutput,
+  nextSceneId?: string,
+  additional: Partial<GameState> = {}
+) {
+  const { newStats, entry, newEventLog, newTriggeredIds, resolvedEndingId } =
+    output;
+
+  const base: Partial<GameState> = {
+    stats: newStats,
+    history: [...state.history, entry],
+    eventLog: newEventLog,
+    triggeredEvents: newTriggeredIds,
+    ...additional,
+  };
+
+  if (resolvedEndingId) {
+    useGameStore.setState({
+      ...base,
+      phase: "ending",
+      endingId: resolvedEndingId,
+      endingTriggerReason: getEndingTriggerReason(resolvedEndingId, newStats),
+    } as Partial<GameStore>);
+    return;
+  }
+
+  if (!nextSceneId) {
+    useGameStore.setState({
+      ...base,
+      phase: "ending",
+      endingId: "expelled",
+      endingTriggerReason: getEndingTriggerReason("expelled", newStats),
+    } as Partial<GameStore>);
+    return;
+  }
+
+  useGameStore.setState({
+    ...base,
+    currentSceneId: nextSceneId,
+    turn: state.turn + 1,
+  } as Partial<GameStore>);
+}

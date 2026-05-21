@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useGameStore } from "../store/gameStore";
 import { SCENES, getSceneNarrative } from "../game/scenes";
 import { CHARACTERS } from "../game/characters";
@@ -5,6 +6,9 @@ import { CharacterPanel } from "./CharacterPanel";
 import { StatPanel } from "./StatPanel";
 import { ChoicePanel } from "./ChoicePanel";
 import { HistoryLog } from "./HistoryLog";
+import { FreeInputBox } from "./FreeInputBox";
+import { ReactionPanel } from "./ReactionPanel";
+import type { PlayerActionAnalysis, CharacterReaction } from "../ai/types";
 
 export function CourtScreen() {
   const currentSceneId = useGameStore((s) => s.currentSceneId);
@@ -13,6 +17,15 @@ export function CourtScreen() {
   const history = useGameStore((s) => s.history);
   const eventLog = useGameStore((s) => s.eventLog);
   const makeChoice = useGameStore((s) => s.makeChoice);
+  const makeFreeInput = useGameStore((s) => s.makeFreeInput);
+
+  // Phase 3: 自由输入的 loading 状态 + 最新反应展示
+  const [freeInputLoading, setFreeInputLoading] = useState(false);
+  const [lastAnalysis, setLastAnalysis] = useState<PlayerActionAnalysis | null>(
+    null
+  );
+  const [lastReactions, setLastReactions] = useState<CharacterReaction[]>([]);
+  const [lastFreeInput, setLastFreeInput] = useState("");
 
   const scene = SCENES[currentSceneId];
   if (!scene) {
@@ -27,8 +40,25 @@ export function CourtScreen() {
     .map((id) => CHARACTERS[id])
     .filter((c): c is NonNullable<typeof c> => c != null);
 
-  // Phase 2: 动态叙事
   const narrative = getSceneNarrative(currentSceneId, stats);
+
+  // 处理自由输入提交
+  const handleFreeInput = async (input: string) => {
+    setFreeInputLoading(true);
+    try {
+      await makeFreeInput(input);
+      // 从 aiLog 中获取最新条目
+      const newLog = useGameStore.getState().aiLog;
+      const latest = newLog[newLog.length - 1];
+      if (latest) {
+        setLastAnalysis(latest.analysis);
+        setLastReactions(latest.reactions);
+        setLastFreeInput(latest.input);
+      }
+    } finally {
+      setFreeInputLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-han-ink via-[#1e1e1e] to-han-ink text-han-gold">
@@ -66,12 +96,27 @@ export function CourtScreen() {
               {narrative}
             </div>
 
-            {/* Choices */}
+            {/* Preset choices */}
             <ChoicePanel
               choices={scene.choices}
               stats={stats}
               onChoose={makeChoice}
             />
+
+            {/* Phase 3: Free input */}
+            <FreeInputBox
+              loading={freeInputLoading}
+              onSubmit={handleFreeInput}
+            />
+
+            {/* Phase 3: AI reaction display */}
+            {(lastAnalysis || lastReactions.length > 0) && (
+              <ReactionPanel
+                analysis={lastAnalysis}
+                reactions={lastReactions}
+                lastInput={lastFreeInput}
+              />
+            )}
           </section>
 
           {/* Right sidebar */}

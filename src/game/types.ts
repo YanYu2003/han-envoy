@@ -1,5 +1,7 @@
+import type { PlayerActionAnalysis, CharacterReaction } from "../ai/types";
+
 /* ============================================================
- * 《汉使》Han Envoy — Phase 2 核心类型定义
+ * 《汉使》Han Envoy — Phase 3 核心类型定义
  * ============================================================ */
 
 /** 游戏阶段 */
@@ -106,6 +108,17 @@ export interface HistoryEntry {
   statChangesSummary: string;
 }
 
+/** Phase 3: AI 交互日志条目 */
+export interface AIInteractionLogEntry {
+  turn: number;
+  /** 玩家原始输入 */
+  input: string;
+  /** AI 解析结果 */
+  analysis: PlayerActionAnalysis;
+  /** 角色反应 */
+  reactions: CharacterReaction[];
+}
+
 /** 完整游戏状态 */
 export interface GameState {
   phase: GamePhase;
@@ -120,4 +133,6 @@ export interface GameState {
   endingId?: string;
   /** Phase 2: 结局触发原因描述 */
   endingTriggerReason?: string;
+  /** Phase 3: AI 交互日志 */
+  aiLog: AIInteractionLogEntry[];
 }

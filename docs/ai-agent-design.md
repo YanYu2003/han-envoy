@@ -287,3 +287,47 @@ VITE_AI_PROVIDER=openai     # 接真实 API 时切换
 ```
 
 AI Provider 实例化通过工厂函数，根据环境变量选择具体实现。
+
+---
+
+## 9. Phase 3：Mock AI 实现（当前）
+
+### 9.1 当前实现概述
+
+Phase 3 实现了 **MockAIProvider**，不调用任何外部 API。
+
+所有"AI 能力"由关键词匹配 + 模板规则模拟，存储在 `src/ai/` 目录下：
+
+| 文件 | 职责 |
+|------|------|
+| `src/ai/types.ts` | AIProvider 接口定义（PlayerActionAnalysis, CharacterReaction, AIContext） |
+| `src/ai/mockAiProvider.ts` | MockAIProvider 实现：关键词匹配 13 种 intent、7 种 tone、7 种 target、20+ 角色反应模板 |
+| `src/ai/analysisToEffects.ts` | 将 PlayerActionAnalysis 映射为 Partial<GameStats> 参数变化 |
+
+### 9.2 AI 负责（当前 Mock）
+
+- 解析玩家自由输入 → 结构化 intent/tone/target/riskLevel
+- 生成角色动态反应文本（基于模板 + 参数状态）
+
+### 9.3 AI 不负责（始终不变）
+
+- 不直接修改游戏参数（由 analysisToEffects + 规则引擎 clamp）
+- 不直接决定胜负或结局
+- 不绕过硬规则
+- 不暴露 API Key
+
+### 9.4 当前限制
+
+- 关键词匹配有限，复杂表达可能被误判为 "unclear"
+- 角色反应是预定义模板，不是真实生成的文本
+- 没有译者误译机制
+- 没有后端代理
+
+### 9.5 后续升级路径
+
+Phase 4 将接入真实大模型（OpenAI / 腾讯混元等），只需：
+
+1. 实现新的 `AIProvider` 类（如 `OpenAIProvider`）
+2. 在 `src/ai/types.ts` 基础上保持一致接口
+3. 通过环境变量 `VITE_AI_PROVIDER` 切换 Provider
+4. 真实 API Key 不放在前端（需后端代理 / Cloud Function）
