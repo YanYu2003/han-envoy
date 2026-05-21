@@ -1,0 +1,28 @@
+{
+  "name": "han-envoy",
+  "private": true,
+  "version": "0.1.0",
+  "description": "《汉使》Han Envoy — AI 驱动的汉代外交叙事模拟游戏",
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=\"--no-experimental-require-module\" vite",
+    "build": "tsc --noEmit && cross-env NODE_OPTIONS=\"--no-experimental-require-module\" vite build",
+    "preview": "cross-env NODE_OPTIONS=\"--no-experimental-require-module\" vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.4.1",
+    "autoprefixer": "^10.4.20",
+    "cross-env": "^10.1.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.2",
+    "vite": "^6.3.0"
+  }
+}
