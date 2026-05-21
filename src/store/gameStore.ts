@@ -1,19 +1,28 @@
 import { create } from "zustand";
-import type { GameState, HistoryEntry, Choice, GameStats } from "../game/types";
+import type {
+  GameState,
+  HistoryEntry,
+  Choice,
+  GameStats,
+  EventLogEntry,
+} from "../game/types";
 import { INITIAL_STATS } from "../game/initialState";
 import { SCENES, STARTING_SCENE_ID } from "../game/scenes";
 import { applyEffects, formatStatChanges } from "../game/simpleRules";
+import { resolveChainReactions } from "../game/chainReactions";
+import {
+  checkThresholdEvents,
+  applyThresholdEvents,
+} from "../game/thresholdEvents";
+import { getEndingTriggerReason } from "../game/endings";
 
 /* ================================================================
  * Store 类型
  * ================================================================ */
 
 interface GameActions {
-  /** 从开始界面进入游戏 */
   startGame: () => void;
-  /** 玩家选择了一个行动 */
   makeChoice: (choiceId: string) => void;
-  /** 回到开始界面 */
   restart: () => void;
 }
 
@@ -30,12 +39,15 @@ function createInitialState(): GameState {
     turn: 0,
     stats: { ...INITIAL_STATS },
     history: [],
+    eventLog: [],
+    triggeredEvents: [],
     endingId: undefined,
+    endingTriggerReason: undefined,
   };
 }
 
 /* ================================================================
- * 获取当前场景中的某个 Choice 对象
+ * 工具函数
  * ================================================================ */
 
 function findChoice(sceneId: string, choiceId: string): Choice | null {
@@ -44,11 +56,10 @@ function findChoice(sceneId: string, choiceId: string): Choice | null {
   return scene.choices.find((c) => c.id === choiceId) ?? null;
 }
 
-/* ================================================================
- * 递归生成参数增量摘要：只显示有变化的字段
- * ================================================================ */
-
-function computeDelta(before: GameStats, after: GameStats): Partial<GameStats> {
+function computeDelta(
+  before: GameStats,
+  after: GameStats
+): Partial<GameStats> {
   const delta: Partial<GameStats> = {};
   const keys = Object.keys(before) as (keyof GameStats)[];
   for (const key of keys) {
@@ -77,7 +88,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       turn: 1,
       stats: { ...INITIAL_STATS },
       history: [],
+      eventLog: [],
+      triggeredEvents: [],
       endingId: undefined,
+      endingTriggerReason: undefined,
     });
   },
 
@@ -91,12 +105,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const choice = findChoice(state.currentSceneId, choiceId);
     if (!choice) return;
 
-    // 1) 应用参数变化
-    const newStats = applyEffects(state.stats, choice.effects);
+    // ---- Phase 2: 条件检查 ----
+    if (choice.condition && !choice.condition(state.stats)) {
+      return; // 不应到达此处（UI 已禁用按钮）
+    }
 
-    // 2) 记录历史
-    const delta = computeDelta(state.stats, newStats);
-    const statSummary = formatStatChanges(delta);
+    // ---- 1) 应用选择效果 ----
+    let newStats = applyEffects(state.stats, choice.effects);
+
+    // ---- 2) Phase 2: 连锁反应 ----
+    const chainResult = resolveChainReactions(newStats);
+    newStats = chainResult.stats;
+
+    // ---- 3) Phase 2: 阈值事件检查 ----
+    const newEvents = checkThresholdEvents(newStats, state.triggeredEvents);
+    const eventResult = applyThresholdEvents(newStats, newEvents);
+    newStats = eventResult.stats;
+    const newTriggeredIds = [
+      ...state.triggeredEvents,
+      ...newEvents.map((e) => e.id),
+    ];
+
+    // ---- 4) 记录历史 ----
+    const choiceDelta = computeDelta(state.stats, newStats);
+    const statSummary = formatStatChanges(choiceDelta);
 
     const entry: HistoryEntry = {
       turn: state.turn,
@@ -106,38 +138,65 @@ export const useGameStore = create<GameStore>((set, get) => ({
       statChangesSummary: statSummary || "无显著变化",
     };
 
-    // 3) 判定结局
+    // ---- 5) 记录事件日志 ----
+    const newEventLog: EventLogEntry[] = [
+      ...state.eventLog,
+      ...eventResult.logs.map((log) => ({
+        turn: state.turn,
+        eventTitle: "",
+        description: log,
+        statChangesSummary: "",
+      })),
+    ];
+
+    // 如果有连锁反应变化，追加到日志
+    if (chainResult.changes.length > 0) {
+      for (const desc of chainResult.changes) {
+        newEventLog.push({
+          turn: state.turn,
+          eventTitle: "连锁反应",
+          description: desc,
+          statChangesSummary: "",
+        });
+      }
+    }
+
+    // ---- 6) 判定结局 ----
     let endingId: string | undefined;
 
     if (choice.endingId) {
-      // 选择直接指定结局
       endingId = choice.endingId;
     } else if (choice.resolveEnding) {
-      // 条件结局判定
       const resolved = choice.resolveEnding(newStats, state.turn);
       if (resolved) endingId = resolved;
     }
 
-    // 4) 如果触发了结局
+    // ---- 7) 触发结局 ----
     if (endingId) {
+      const triggerReason = getEndingTriggerReason(endingId, newStats);
       set({
         stats: newStats,
         history: [...state.history, entry],
+        eventLog: newEventLog,
+        triggeredEvents: newTriggeredIds,
         phase: "ending",
         endingId,
+        endingTriggerReason: triggerReason,
       });
       return;
     }
 
-    // 5) 正常推进到下一场景
+    // ---- 8) 正常推进 ----
     const nextSceneId = choice.nextSceneId;
     if (!nextSceneId) {
-      // 没有 nextSceneId 且没有结局 → fallback 到危机结局
       set({
         stats: newStats,
         history: [...state.history, entry],
+        eventLog: newEventLog,
+        triggeredEvents: newTriggeredIds,
         phase: "ending",
         endingId: "expelled",
+        endingTriggerReason: getEndingTriggerReason("expelled", newStats),
       });
       return;
     }
@@ -145,6 +204,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       stats: newStats,
       history: [...state.history, entry],
+      eventLog: newEventLog,
+      triggeredEvents: newTriggeredIds,
       currentSceneId: nextSceneId,
       turn: state.turn + 1,
     });

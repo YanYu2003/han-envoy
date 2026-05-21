@@ -1,5 +1,5 @@
 import { useGameStore } from "../store/gameStore";
-import { SCENES } from "../game/scenes";
+import { SCENES, getSceneNarrative } from "../game/scenes";
 import { CHARACTERS } from "../game/characters";
 import { CharacterPanel } from "./CharacterPanel";
 import { StatPanel } from "./StatPanel";
@@ -11,6 +11,7 @@ export function CourtScreen() {
   const stats = useGameStore((s) => s.stats);
   const turn = useGameStore((s) => s.turn);
   const history = useGameStore((s) => s.history);
+  const eventLog = useGameStore((s) => s.eventLog);
   const makeChoice = useGameStore((s) => s.makeChoice);
 
   const scene = SCENES[currentSceneId];
@@ -26,9 +27,12 @@ export function CourtScreen() {
     .map((id) => CHARACTERS[id])
     .filter((c): c is NonNullable<typeof c> => c != null);
 
+  // Phase 2: 动态叙事
+  const narrative = getSceneNarrative(currentSceneId, stats);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-han-ink via-[#1e1e1e] to-han-ink text-han-gold">
-      {/* Top bar：场景标题 + 回合数 */}
+      {/* Top bar */}
       <header className="border-b border-han-gold/10 px-4 md:px-8 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-han-gold/80 font-bold tracking-wider text-sm md:text-base">
@@ -46,12 +50,12 @@ export function CourtScreen() {
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left sidebar：角色面板 */}
+          {/* Left sidebar */}
           <aside className="lg:w-56 shrink-0 order-3 lg:order-1">
             <CharacterPanel characters={sceneCharacters} />
           </aside>
 
-          {/* Center：叙事 + 选择 */}
+          {/* Center */}
           <section className="flex-1 order-1 lg:order-2 space-y-6">
             {/* Narrative */}
             <div
@@ -59,20 +63,21 @@ export function CourtScreen() {
                           text-han-gold/85 text-sm leading-relaxed whitespace-pre-line
                           min-h-[160px] font-han"
             >
-              {scene.narrative}
+              {narrative}
             </div>
 
             {/* Choices */}
             <ChoicePanel
               choices={scene.choices}
+              stats={stats}
               onChoose={makeChoice}
             />
           </section>
 
-          {/* Right sidebar：参数面板 */}
+          {/* Right sidebar */}
           <aside className="lg:w-56 shrink-0 order-2 lg:order-3 space-y-6">
             <StatPanel stats={stats} />
-            <HistoryLog history={history} />
+            <HistoryLog history={history} eventLog={eventLog} />
           </aside>
         </div>
       </main>

@@ -49,20 +49,25 @@
 
 ---
 
-## Phase 2（预留）
+## Phase 2（已完成）
 
-### 目标：AI 能力接入
+### 目标：规则系统与分支深度
 
-**待开发的 Prompt 占位**
+**Prompt 标题：实现 Phase 2 规则系统与分支深度**
 
-> **即将编写——期待内容：**
-> - 实现 AIProvider 接口（OpenAI / 腾讯混元）
-> - 实现 AI 配置管理（环境变量驱动）
-> - 实现自由输入解析流水线
-> - 实现 AI 角色反应生成
-> - 实现安全性/fallback 机制
-> - 实现 AI 生成结局文案
-> - 性能优化与超时处理
+**输出：**
+- **新增文件：**
+  - `src/game/thresholdEvents.ts` — 6 个阈值事件系统
+  - `src/game/chainReactions.ts` — 6 组参数连锁反应
+- **修改文件：**
+  - `src/game/types.ts` — 新增 ThresholdEvent, EventLogEntry, NarrativeVariant, Choice.condition/disabledReason/riskLevel
+  - `src/game/scenes.ts` — 条件选项（canDemandHostage/canAssassinate 等）、动态叙事变体（每场景 5 条）、风险等级（1–5）
+  - `src/game/endings.ts` — 动态结局补充段落、getEndingTriggerReason、buildEndingDescription
+  - `src/store/gameStore.ts` — 整合连锁反应、阈值事件检查、条件选项校验
+  - `src/components/ChoicePanel.tsx` — 禁用状态显示、高风险标记、风险等级指示
+  - `src/components/CourtScreen.tsx` — 动态叙事（getSceneNarrative）
+  - `src/components/EndingScreen.tsx` — 触发原因展示、动态结局文本、关键事件汇总
+  - `src/components/HistoryLog.tsx` — 合并事件日志（黄色边框标识）
 
 ---
 

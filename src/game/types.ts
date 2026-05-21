@@ -1,5 +1,5 @@
 /* ============================================================
- * 《汉使》Han Envoy — Phase 1 核心类型定义
+ * 《汉使》Han Envoy — Phase 2 核心类型定义
  * ============================================================ */
 
 /** 游戏阶段 */
@@ -37,32 +37,53 @@ export interface Choice {
   id: string;
   label: string;
   description: string;
-  /** 选择后对参数的增量变化（部分可缺省） */
   effects: Partial<GameStats>;
-  /** 选择后显示的剧情反馈文本 */
   resultText: string;
-  /** 下一场景 ID（若不触发结局） */
   nextSceneId?: string;
-  /** 直接指定的结局 ID（若有） */
   endingId?: string;
-  /**
-   * 条件结局判定函数。
-   * 若返回非空字符串，则以此结局 ID 为准。
-   * 仅在 choice 未指定 endingId 时调用。
-   */
   resolveEnding?: (stats: GameStats, turn: number) => string | null;
+  /** Phase 2: 显示条件 */
+  condition?: (stats: GameStats) => boolean;
+  /** Phase 2: 条件不满足时的提示 */
+  disabledReason?: string;
+  /** Phase 2: 风险等级（1–5） */
+  riskLevel?: 1 | 2 | 3 | 4 | 5;
+}
+
+/** 动态叙事片段 */
+export interface NarrativeVariant {
+  condition: (stats: GameStats) => boolean;
+  text: string;
 }
 
 /** 场景 */
 export interface Scene {
   id: string;
   title: string;
-  /** 叙事文本 */
   narrative: string;
-  /** 此场景中出现的角色 ID 列表 */
+  /** Phase 2: 根据参数状态追加/覆盖的动态叙事片段 */
+  narrativeVariants?: NarrativeVariant[];
   characterIds: string[];
-  /** 玩家可选行动列表 */
   choices: Choice[];
+}
+
+/** 阈值事件 */
+export interface ThresholdEvent {
+  id: string;
+  title: string;
+  description: string;
+  condition: (stats: GameStats) => boolean;
+  effects: Partial<GameStats>;
+  /** 一局游戏内只触发一次 */
+  once: boolean;
+}
+
+/** 事件日志条目 */
+export interface EventLogEntry {
+  turn: number;
+  eventTitle: string;
+  description: string;
+  statChangesSummary: string;
 }
 
 /** 结局 */
@@ -70,6 +91,8 @@ export interface Ending {
   id: string;
   title: string;
   description: string;
+  /** Phase 2: 根据参数动态追加的补充段落 */
+  dynamicSupplements?: ((stats: GameStats) => string)[];
   historianComment: string;
   tone: "glorious" | "tragic" | "neutral" | "disgrace" | "victory";
 }
@@ -90,5 +113,11 @@ export interface GameState {
   turn: number;
   stats: GameStats;
   history: HistoryEntry[];
+  /** Phase 2: 事件日志 */
+  eventLog: EventLogEntry[];
+  /** Phase 2: 已触发的 once 事件 ID 集合 */
+  triggeredEvents: string[];
   endingId?: string;
+  /** Phase 2: 结局触发原因描述 */
+  endingTriggerReason?: string;
 }
