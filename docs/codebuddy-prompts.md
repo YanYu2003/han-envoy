@@ -71,6 +71,25 @@
 
 ---
 
+## Phase 2.5（已完成）
+
+### 目标：Act 0 入朝前准备与前任汉使死因调查系统设计
+
+**Prompt 标题：Act 0 入朝前准备阶段设计（Phase 2.5）**
+
+**输出：**
+- **新增文件：**
+  - `docs/act-0-design.md` — Act 0 完整设计文档（核心循环、行动类型、资源系统、与前序系统关系）
+  - `src/game/preCourtTypes.ts` — 预留类型（PreparationAction, IntelItem, EvidenceItem, ContactState, PreCourtState 等）
+  - `src/game/preCourtDesign.ts` — 示例数据（8 个准备行动、8 条情报、5 个证据、4 个调查结果）
+- **修改文件：**
+  - `docs/game-design.md` — 新增第 7 章 "Act 0：入朝前准备阶段设想"
+  - `docs/codebuddy-prompts.md` — 记录本阶段
+  - `docs/acceptance-checklist.md` — 追加 Phase 2.5 验收清单
+- **不变：** 当前游戏主流程（start → court → ending）未受任何影响
+
+---
+
 ## Phase 3（预留）
 
 ### 目标：完整第一章

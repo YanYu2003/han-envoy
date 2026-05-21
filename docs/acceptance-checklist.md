@@ -207,6 +207,44 @@
 
 ---
 
+# Phase 2.5 验收清单
+
+> 逐项检查 Phase 2.5 完成情况
+
+## 1. 项目完整性
+
+- [ ] 当前游戏流程不变（start → court → ending）
+- [ ] `npm run build` 通过
+- [ ] 没有接入真实 AI API
+- [ ] 没有提交 API Key
+- [ ] 没有新增 UI 主流程
+- [ ] 没有重写 README.md
+
+## 2. 文档完整性
+
+- [ ] `docs/act-0-design.md` — Act 0 完整设计文档已新增
+- [ ] `docs/game-design.md` — 新增 Act 0 章节（第 7 章）
+- [ ] `docs/codebuddy-prompts.md` — 已记录 Phase 2.5
+- [ ] `docs/acceptance-checklist.md` — 本文件已追加
+
+## 3. 代码预留
+
+- [ ] `src/game/preCourtTypes.ts` — 已创建
+- [ ] `src/game/preCourtDesign.ts` — 已创建
+- [ ] 预留文件未接入当前游戏主流程
+
+## 4. 设计覆盖
+
+- [ ] Act 0 核心循环已设计
+- [ ] 至少 8 种行动类型已定义
+- [ ] 前任汉使死因调查线已详细设计
+- [ ] 调查结果对现有 10 项参数的影响已说明
+- [ ] 资源系统（情报、证据、信任、暴露度、行动次数）已设计
+- [ ] 与现有系统的关系已说明
+- [ ] 后续实现路线已规划
+
+---
+
 **验收结论：** _______________
 
 **签名：** _______________
