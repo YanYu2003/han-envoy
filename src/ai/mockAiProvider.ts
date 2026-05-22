@@ -224,7 +224,7 @@ const TONE_RULES: { keywords: string[]; tone: PlayerTone }[] = [
   { keywords: ["请", "愿", "恳请", "乞", "伏惟"], tone: "humble" },
   { keywords: ["天子", "诏", "持节", "礼", "朝贡", "典"], tone: "ritualistic" },
   { keywords: ["尔等", "区区", "鼠辈", "蛮夷"], tone: "arrogant" },
-  { keywords: ["怒", "血债", "必诛", "踏平", "不客气"], tone: "furious" },
+  { keywords: ["怒", "血债", "必诛", "踏平", "不客气", "死", "杀", "诛", "灭", "必死", "处死", "杀死"], tone: "furious" },
   { keywords: ["何必", "呵呵", "可笑", "有趣"], tone: "sarcastic" },
 ];
 

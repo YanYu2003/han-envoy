@@ -6,6 +6,7 @@
  * ============================================================ */
 
 import type { PlayerIntent, PlayerTone, PlayerTarget } from "./types";
+import { mockAIProvider } from "./mockAiProvider";
 
 export interface MockAiTestCase {
   input: string;
@@ -90,7 +91,7 @@ export const MOCK_AI_TEST_CASES: MockAiTestCase[] = [
   {
     input: "我愿暂退一步，但楼兰必须给出承诺",
     expectedIntent: "negotiate",
-    note: "退一步但要求承诺 → negotiate 或 threaten",
+    note: "退一步但要求承诺 → negotiate",
   },
 
   // ---- 谈判 / 通商 ----
@@ -197,3 +198,94 @@ export const MOCK_AI_TEST_CASES: MockAiTestCase[] = [
     note: "区区 + 尔等 → insult",
   },
 ];
+
+/* ================================================================
+ * runMockAiTestCases
+ *
+ * 手动运行所有测试样例，输出 pass/fail 结果。
+ * - expectedIntent 不匹配 → FAIL（强制失败）
+ * - expectedTone / expectedTarget 不匹配 → WARNING（仅提示，不计失败）
+ *
+ * 用法：
+ *   import { runMockAiTestCases } from "../ai/mockAiTestCases";
+ *   runMockAiTestCases().then((r) => console.table(r));
+ * ================================================================ */
+
+export interface TestResult {
+  index: number;
+  input: string;
+  expectedIntent: PlayerIntent;
+  actualIntent: PlayerIntent;
+  intentPass: boolean;
+  toneWarning?: string;
+  targetWarning?: string;
+  note: string;
+}
+
+export async function runMockAiTestCases(): Promise<{
+  results: TestResult[];
+  summary: { total: number; passed: number; failed: number; warnings: number };
+}> {
+  const results: TestResult[] = [];
+  let passed = 0;
+  let failed = 0;
+  let warnings = 0;
+
+  for (let i = 0; i < MOCK_AI_TEST_CASES.length; i++) {
+    const tc = MOCK_AI_TEST_CASES[i]!;
+    const analysis = await mockAIProvider.parsePlayerInput(tc.input, {
+      sceneId: "test",
+      sceneTitle: "测试",
+      stats: {
+        hanPrestige: 30,
+        xiongnuPressure: 40,
+        kingAnger: 20,
+        kingFear: 30,
+        proHan: 25,
+        proXiongnu: 35,
+        tradeAccess: 30,
+        casusBelli: 15,
+        envoyHonor: 50,
+        historianScore: 50,
+      },
+      recentHistory: [],
+    });
+
+    const intentPass = analysis.intent === tc.expectedIntent;
+    if (intentPass) passed++;
+    else failed++;
+
+    let toneWarning: string | undefined;
+    let targetWarning: string | undefined;
+
+    if (tc.expectedTone && analysis.tone !== tc.expectedTone) {
+      toneWarning = `期望 tone=${tc.expectedTone}，实际=${analysis.tone}`;
+      warnings++;
+    }
+    if (tc.expectedTarget && analysis.target !== tc.expectedTarget) {
+      targetWarning = `期望 target=${tc.expectedTarget}，实际=${analysis.target}`;
+      warnings++;
+    }
+
+    results.push({
+      index: i + 1,
+      input: tc.input,
+      expectedIntent: tc.expectedIntent,
+      actualIntent: analysis.intent,
+      intentPass,
+      toneWarning,
+      targetWarning,
+      note: tc.note,
+    });
+  }
+
+  return {
+    results,
+    summary: {
+      total: MOCK_AI_TEST_CASES.length,
+      passed,
+      failed,
+      warnings,
+    },
+  };
+}
