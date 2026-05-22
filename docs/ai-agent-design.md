@@ -369,4 +369,48 @@ Mock Parser 仍然**不是**可靠的自然语言理解系统：
 | `mock` | 显示自由输入 + Mock AI 实验提示（当前默认） |
 | `realAI` | 未来 Phase 4 真实 AI 模式 |
 
-默认模式为 `mock`。切换只需修改 `DEFAULT_AI_PLAY_MODE` 常量。
+默认模式为 `mock`。切换只需修改 `DEFAULT_AI_PLAY_MODE` 常量。Phase 4 已升级为可通过 `VITE_AI_PLAY_MODE` 环境变量配置。
+
+---
+
+## 11. Phase 4：真实 AI 接入架构与安全代理设计
+
+### 11.1 核心变更
+
+| 变更 | 说明 |
+|------|------|
+| AI 模式配置化 | 从 `DEFAULT_AI_PLAY_MODE` 硬编码改为 `getAIPlayMode()` 环境变量读取 |
+| Provider Factory | `getAIProvider(mode)` 根据模式返回对应 Provider |
+| RemoteAIProvider | 新实现，通过后端代理调用真实 AI，失败时 fallback 到 Mock |
+| Proxy 设计文档 | `docs/ai-proxy-design.md` 规范了代理接口和安全要求 |
+| Prompt 模板 | `src/ai/prompts.ts` 为真实 AI 准备了 System Prompt |
+
+### 11.2 三种模式的边界
+
+| 模式 | Provider | 自由输入 | 适用场景 |
+|------|----------|----------|----------|
+| `presetOnly` | null（不可自由输入） | 隐藏 | 演示、无 AI 稳定游玩 |
+| `mock` | MockAIProvider | 显示 + 实验警告 | 开发验证、流程测试 |
+| `realAI` | RemoteAIProvider（→ 后端代理） | 显示 | 生产部署 |
+
+### 11.3 安全架构
+
+```
+前端 (VITE_AI_PROXY_URL)  →  后端代理  →  真实 AI Provider
+不保存 API Key               保存 API Key    (OpenAI/DeepSeek/腾讯混元)
+```
+
+### 11.4 Fallback 策略
+
+- `realAI` 模式但 `VITE_AI_PROXY_URL` 未配置 → fallback 到 mock（带 console.warn）
+- RemoteAIProvider 请求失败 → fallback 到 mockAIProvider
+- `presetOnly` 模式下 store 层也有安全防护，不会调用 Provider
+
+### 11.5 新增文件
+
+| 文件 | 说明 |
+|------|------|
+| `src/ai/aiProviderFactory.ts` | AI Provider 选择器 |
+| `src/ai/remoteAiProvider.ts` | 远程 AI Provider（安全代理客户端） |
+| `src/ai/prompts.ts` | 真实 AI Prompt 模板 |
+| `docs/ai-proxy-design.md` | AI 代理接口设计文档 |

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGameStore } from "../store/gameStore";
 import { SCENES, getSceneNarrative } from "../game/scenes";
 import { CHARACTERS } from "../game/characters";
-import { DEFAULT_AI_PLAY_MODE } from "../ai/aiMode";
+import { getAIPlayMode } from "../ai/aiMode";
 import { CharacterPanel } from "./CharacterPanel";
 import { StatPanel } from "./StatPanel";
 import { ChoicePanel } from "./ChoicePanel";
@@ -25,8 +25,8 @@ export function CourtScreen() {
   const [lastReactions, setLastReactions] = useState<CharacterReaction[]>([]);
   const [lastFreeInput, setLastFreeInput] = useState("");
 
-  // AI 模式（当前使用默认值，后续可改为动态切换）
-  const aiMode = DEFAULT_AI_PLAY_MODE;
+  // AI 模式（从环境变量读取，支持 presetOnly / mock / realAI）
+  const aiMode = getAIPlayMode();
 
   const scene = SCENES[currentSceneId];
   if (!scene) {

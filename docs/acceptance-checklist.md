@@ -330,6 +330,63 @@
 
 ---
 
+# Phase 4 验收清单
+
+> 逐项检查 Phase 4 完成情况
+
+## 1. AI 模式配置化
+
+- [ ] `getAIPlayMode()` 能读取 `VITE_AI_PLAY_MODE` 环境变量
+- [ ] 非法环境变量值 fallback 到 `mock`
+- [ ] 默认模式仍为 `mock`
+
+## 2. AI Provider 工厂
+
+- [ ] `getAIProvider("presetOnly")` 返回 null
+- [ ] `getAIProvider("mock")` 返回 MockAIProvider
+- [ ] `getAIProvider("realAI")` 在代理未配置时 fallback 到 mock
+
+## 3. 远程 AI Provider
+
+- [ ] `remoteAiProvider.ts` 已创建
+- [ ] 不包含任何真实 API Key
+- [ ] 通过 fetch 调用代理
+- [ ] 请求失败时 fallback 到 MockAIProvider
+- [ ] 有超时处理（15s）
+
+## 4. Prompt 模板
+
+- [ ] `prompts.ts` 已创建
+- [ ] 包含 `buildParsePrompt` 和 `buildReactionPrompt`
+- [ ] 强调 AI 只负责解析和表达，不直接决定胜负
+
+## 5. 代理文档
+
+- [ ] `docs/ai-proxy-design.md` 已创建
+- [ ] 说明为什么不能在前端保存 API Key
+- [ ] 包含 parse/react 的 JSON Schema
+- [ ] 包含安全要求
+- [ ] 包含部署方案
+
+## 6. 环境变量
+
+- [ ] `.env.example` 已更新
+- [ ] 包含 `VITE_AI_PLAY_MODE` 和 `VITE_AI_PROXY_URL`
+- [ ] 强调 `VITE_AI_API_KEY` 不推荐公开部署
+
+## 7. 安全与质量
+
+- [ ] 前端不保存真实 API Key
+- [ ] 预设选项仍可用
+- [ ] mock 自由输入仍可用
+- [ ] presetOnly 隐藏自由输入
+- [ ] realAI 模式无代理不会导致游戏崩溃
+- [ ] README.md 未被覆盖
+- [ ] Act 0 未接入主流程
+- [ ] `npm run build` 通过
+
+---
+
 **验收结论：** _______________
 
 **签名：** _______________

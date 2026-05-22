@@ -17,7 +17,8 @@ import {
 } from "../game/thresholdEvents";
 import { getEndingTriggerReason } from "../game/endings";
 import { resolveCrisisEnding, resolveAssassinationEnding } from "../game/scenes";
-import { mockAIProvider } from "../ai/mockAiProvider";
+import { getAIPlayMode } from "../ai/aiMode";
+import { getAIProvider } from "../ai/aiProviderFactory";
 import { analysisToEffects } from "../ai/analysisToEffects";
 
 /* ================================================================
@@ -210,14 +211,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const scene = SCENES[state.currentSceneId];
     if (!scene) return;
 
-    // 1) Mock AI 解析
+    // 1) 获取 AI Provider（支持 presetOnly / mock / realAI）
+    const aiMode = getAIPlayMode();
+    const provider = getAIProvider(aiMode);
+    if (!provider) {
+      console.warn("[HanEnvoy] 当前为 presetOnly 模式，自由输入已被忽略");
+      return;
+    }
+
     const context = {
       sceneId: state.currentSceneId,
       sceneTitle: scene.title,
       stats: state.stats,
       recentHistory: state.history.slice(-3),
     };
-    const analysis = await mockAIProvider.parsePlayerInput(input, context);
+    const analysis = await provider.parsePlayerInput(input, context);
 
     // 2) 分析 → 规则效果
     const effects = analysisToEffects(analysis);
@@ -256,7 +264,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     // 6) 角色反应
-    const reactions = await mockAIProvider.generateCharacterReactions(
+    const reactions = await provider.generateCharacterReactions(
       analysis,
       context
     );

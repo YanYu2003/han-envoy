@@ -134,21 +134,30 @@
 
 ---
 
-## Phase 4（预留）
+## Phase 4（已完成）
 
-### 目标：完整第一章
+### 目标：真实 AI 接入架构与安全代理设计
 
-**待开发的 Prompt 占位**
+**Prompt 标题：Phase 4 真实 AI 接入架构与安全代理设计**
 
-> **即将编写——期待内容：**
-> - 完整第一章朝堂流程
-> - 多结局支持
-> - UI 润色与动画
-> - 音效与背景音乐
-> - 史官评价终版
-> - 响应式布局适配
-> - 性能优化
-> - 演示 Demo 流程打磨
+**输出：**
+- **新增文件：**
+  - `src/ai/aiProviderFactory.ts` — Provider 选择器（presetOnly→null, mock→Mock, realAI→Remote）
+  - `src/ai/remoteAiProvider.ts` — 远程 AI Provider（fetch 代理，失败 fallback 到 Mock）
+  - `src/ai/prompts.ts` — 真实 AI Prompt 模板（parse + react）
+  - `docs/ai-proxy-design.md` — AI 代理接口设计文档（架构、JSON Schema、安全要求、部署方案）
+- **修改文件：**
+  - `src/ai/aiMode.ts` — 新增 `getAIPlayMode()` 环境变量读取函数
+  - `src/store/gameStore.ts` — makeFreeInput 改用 provider factory
+  - `src/components/CourtScreen.tsx` — 使用 `getAIPlayMode()` 替代常量
+  - `.env.example` — 新增 VITE_AI_PLAY_MODE、VITE_AI_PROXY_URL；安全注释
+  - `docs/ai-agent-design.md` — 新增 Phase 4 章节
+  - `docs/codebuddy-prompts.md` — 记录本阶段
+  - `docs/acceptance-checklist.md` — 追加 Phase 4 验收清单
+
+---
+
+## Phase 5（预留）
 
 ---
 
