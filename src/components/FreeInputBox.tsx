@@ -1,13 +1,13 @@
 import { useState } from "react";
+import type { AIPlayMode } from "../ai/aiMode";
 
 interface Props {
-  /** 是否正在加载（Mock AI 模拟延迟） */
   loading: boolean;
-  /** 提交自由输入 */
+  aiMode: AIPlayMode;
   onSubmit: (input: string) => void;
 }
 
-export function FreeInputBox({ loading, onSubmit }: Props) {
+export function FreeInputBox({ loading, aiMode, onSubmit }: Props) {
   const [value, setValue] = useState("");
 
   const handleSubmit = () => {
@@ -23,6 +23,17 @@ export function FreeInputBox({ loading, onSubmit }: Props) {
       handleSubmit();
     }
   };
+
+  // presetOnly 模式：隐藏自由输入
+  if (aiMode === "presetOnly") {
+    return (
+      <div className="mt-4 p-3 rounded border border-han-gold/10 bg-black/10">
+        <div className="text-han-gold/30 text-xs text-center">
+          自由输入需要启用 AI 模型。当前为预设选项模式。
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-4 p-3 rounded border border-han-gold/20 bg-black/20">
@@ -45,6 +56,13 @@ export function FreeInputBox({ loading, onSubmit }: Props) {
                    transition-colors"
         disabled={loading}
       />
+
+      {aiMode === "mock" && (
+        <div className="mt-1 text-[10px] text-yellow-500/50 leading-relaxed">
+          当前为 Mock AI 实验解析，仅用于验证流程。
+          复杂表达可能误判；正式版本将使用真实 AI 模型。
+        </div>
+      )}
 
       <div className="flex items-center justify-between mt-2">
         <span className="text-[10px] text-han-gold/30">

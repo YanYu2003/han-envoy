@@ -331,3 +331,42 @@ Phase 4 将接入真实大模型（OpenAI / 腾讯混元等），只需：
 2. 在 `src/ai/types.ts` 基础上保持一致接口
 3. 通过环境变量 `VITE_AI_PROVIDER` 切换 Provider
 4. 真实 API Key 不放在前端（需后端代理 / Cloud Function）
+
+---
+
+## 10. Phase 3.1：Mock Parser 修正与 AI 模式开关
+
+### 10.1 改进内容
+
+Phase 3.1 修复了 Phase 3 MockAIProvider 的明显误判问题，主要改进：
+
+| 问题 | 解决方案 |
+|------|----------|
+| "投降"关键词导致反向匹配 | 增加 `scoreIntent` 综合评分 + 否定检测 + 主语判断 |
+| 否定结构无视 | 识别"不""不可""不愿"等否定词，删除被否定 intent 的分数 |
+| 条件威胁句式忽略 | 检测"不…就…""若不…则…"等模式，加分到 threaten |
+| 投降 vs 要求对方投降 | 检查主语（我/汉使 vs 楼兰/你），后者改为 threaten |
+| priority 字段未有效使用 | 评分公式中包含 `priority * 0.5` |
+| post-processing | 新增 `postProcessIntent` 修正函数处理边界情况 |
+
+### 10.2 Parser 边界说明
+
+Mock Parser 仍然**不是**可靠的自然语言理解系统：
+
+- 复杂隐喻/双关语大概率被误判
+- 超长句子评分可能分散
+- 缺乏真正语义理解
+
+建议在演示中使用预设选项为主，自由输入作为概念验证。
+
+### 10.3 AI 模式开关
+
+新增 `src/ai/aiMode.ts` 定义三种模式：
+
+| 模式 | 说明 |
+|------|------|
+| `presetOnly` | 隐藏自由输入，只保留预设选项（安全模式） |
+| `mock` | 显示自由输入 + Mock AI 实验提示（当前默认） |
+| `realAI` | 未来 Phase 4 真实 AI 模式 |
+
+默认模式为 `mock`。切换只需修改 `DEFAULT_AI_PLAY_MODE` 常量。

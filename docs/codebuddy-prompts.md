@@ -114,6 +114,26 @@
 
 ---
 
+## Phase 3.1（已完成）
+
+### 目标：Mock Parser 修正与 AI 模式开关
+
+**Prompt 标题：Phase 3.1 Mock Parser 修正与 AI 模式开关策略**
+
+**输出：**
+- **新增文件：**
+  - `src/ai/mockAiTestCases.ts` — 25 条测试样例
+  - `src/ai/aiMode.ts` — AI 模式开关定义（presetOnly / mock / realAI）
+- **修改文件：**
+  - `src/ai/mockAiProvider.ts` — 重写解析逻辑：综合评分 + priority + 否定检测 + 条件威胁 + 主语判断 + post-processing
+  - `src/components/FreeInputBox.tsx` — 支持 aiMode 属性，mock 模式显示实验警告，presetOnly 隐藏输入
+  - `src/components/CourtScreen.tsx` — 使用 DEFAULT_AI_PLAY_MODE
+  - `docs/ai-agent-design.md` — 新增 Phase 3.1 章节
+  - `docs/codebuddy-prompts.md` — 记录本阶段
+  - `docs/acceptance-checklist.md` — 追加 Phase 3.1 验收清单
+
+---
+
 ## Phase 4（预留）
 
 ### 目标：完整第一章

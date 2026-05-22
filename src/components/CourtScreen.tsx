@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useGameStore } from "../store/gameStore";
 import { SCENES, getSceneNarrative } from "../game/scenes";
 import { CHARACTERS } from "../game/characters";
+import { DEFAULT_AI_PLAY_MODE } from "../ai/aiMode";
 import { CharacterPanel } from "./CharacterPanel";
 import { StatPanel } from "./StatPanel";
 import { ChoicePanel } from "./ChoicePanel";
@@ -19,13 +20,13 @@ export function CourtScreen() {
   const makeChoice = useGameStore((s) => s.makeChoice);
   const makeFreeInput = useGameStore((s) => s.makeFreeInput);
 
-  // Phase 3: 自由输入的 loading 状态 + 最新反应展示
   const [freeInputLoading, setFreeInputLoading] = useState(false);
-  const [lastAnalysis, setLastAnalysis] = useState<PlayerActionAnalysis | null>(
-    null
-  );
+  const [lastAnalysis, setLastAnalysis] = useState<PlayerActionAnalysis | null>(null);
   const [lastReactions, setLastReactions] = useState<CharacterReaction[]>([]);
   const [lastFreeInput, setLastFreeInput] = useState("");
+
+  // AI 模式（当前使用默认值，后续可改为动态切换）
+  const aiMode = DEFAULT_AI_PLAY_MODE;
 
   const scene = SCENES[currentSceneId];
   if (!scene) {
@@ -42,12 +43,10 @@ export function CourtScreen() {
 
   const narrative = getSceneNarrative(currentSceneId, stats);
 
-  // 处理自由输入提交
   const handleFreeInput = async (input: string) => {
     setFreeInputLoading(true);
     try {
       await makeFreeInput(input);
-      // 从 aiLog 中获取最新条目
       const newLog = useGameStore.getState().aiLog;
       const latest = newLog[newLog.length - 1];
       if (latest) {
@@ -62,7 +61,6 @@ export function CourtScreen() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-han-ink via-[#1e1e1e] to-han-ink text-han-gold">
-      {/* Top bar */}
       <header className="border-b border-han-gold/10 px-4 md:px-8 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-han-gold/80 font-bold tracking-wider text-sm md:text-base">
@@ -77,17 +75,13 @@ export function CourtScreen() {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left sidebar */}
           <aside className="lg:w-56 shrink-0 order-3 lg:order-1">
             <CharacterPanel characters={sceneCharacters} />
           </aside>
 
-          {/* Center */}
           <section className="flex-1 order-1 lg:order-2 space-y-6">
-            {/* Narrative */}
             <div
               className="p-4 md:p-6 rounded border border-han-gold/15 bg-black/20
                           text-han-gold/85 text-sm leading-relaxed whitespace-pre-line
@@ -96,20 +90,19 @@ export function CourtScreen() {
               {narrative}
             </div>
 
-            {/* Preset choices */}
             <ChoicePanel
               choices={scene.choices}
               stats={stats}
               onChoose={makeChoice}
             />
 
-            {/* Phase 3: Free input */}
+            {/* Phase 3.1: Free input with AI mode */}
             <FreeInputBox
               loading={freeInputLoading}
+              aiMode={aiMode}
               onSubmit={handleFreeInput}
             />
 
-            {/* Phase 3: AI reaction display */}
             {(lastAnalysis || lastReactions.length > 0) && (
               <ReactionPanel
                 analysis={lastAnalysis}
@@ -119,7 +112,6 @@ export function CourtScreen() {
             )}
           </section>
 
-          {/* Right sidebar */}
           <aside className="lg:w-56 shrink-0 order-2 lg:order-3 space-y-6">
             <StatPanel stats={stats} />
             <HistoryLog history={history} eventLog={eventLog} />
