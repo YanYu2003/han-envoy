@@ -4,34 +4,45 @@
  * 封装对 OpenAI-compatible API 的调用。
  * 支持 DeepSeek、OpenAI 等兼容 Chat Completions 接口的 Provider。
  *
+ * 环境变量在运行时读取（非模块顶层），
+ * 确保 dotenv.config 加载后能读到正确配置。
+ *
  * 环境变量：
  *   AI_API_BASE_URL  — API 基础地址（默认 https://api.deepseek.com）
  *   AI_API_KEY       — API 密钥（必需，仅服务端）
  *   AI_MODEL         — 模型名（默认 deepseek-chat）
  * ============================================================ */
 
-const BASE_URL = process.env.AI_API_BASE_URL || "https://api.deepseek.com";
-const MODEL = process.env.AI_MODEL || "deepseek-chat";
-
 interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
+function getAIConfig() {
+  return {
+    baseUrl: process.env.AI_API_BASE_URL || "https://api.deepseek.com",
+    model: process.env.AI_MODEL || "deepseek-chat",
+    apiKey: process.env.AI_API_KEY,
+  };
+}
+
 /**
  * 调用 AI Provider 的 Chat Completions 接口。
  * 返回原始文本内容（需自行 JSON.parse）。
+ *
+ * 注意：环境变量在函数内部读取，确保 dotenv 配置已加载。
  */
 export async function callAI(messages: ChatMessage[]): Promise<string> {
-  const apiKey = process.env.AI_API_KEY;
+  const { baseUrl, model, apiKey } = getAIConfig();
+
   if (!apiKey) {
     throw new Error("AI_API_KEY 未配置");
   }
 
   const startTime = Date.now();
-  const url = `${BASE_URL}/chat/completions`;
+  const url = `${baseUrl}/chat/completions`;
 
-  console.log(`[AI Client] 请求 ${MODEL}，消息数: ${messages.length}`);
+  console.log(`[AI Client] 请求 ${model}，消息数: ${messages.length}`);
 
   const response = await fetch(url, {
     method: "POST",
@@ -40,7 +51,7 @@ export async function callAI(messages: ChatMessage[]): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       messages,
       temperature: 0.4,
       max_tokens: 1024,

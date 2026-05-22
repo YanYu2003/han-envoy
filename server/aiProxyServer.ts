@@ -3,12 +3,19 @@
  *
  * 本地 Express 代理，用于调用真实 AI Provider。
  * 读取服务端环境变量中的 API Key，不暴露到前端。
+ *
+ * 注意：项目使用 ESM ("type": "module")，
+ * 因此使用 fileURLToPath 替代 __dirname。
  * ============================================================ */
 
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 加载 .env.server（优先）或 .env
 dotenv.config({ path: path.resolve(__dirname, "../.env.server") });

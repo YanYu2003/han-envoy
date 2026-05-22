@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && cross-env NODE_OPTIONS=\"--no-experimental-require-module\" vite build",
     "preview": "cross-env NODE_OPTIONS=\"--no-experimental-require-module\" vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "server:dev": "tsx server/aiProxyServer.ts"
+    "server:dev": "tsx server/aiProxyServer.ts",
+    "server:check": "tsx server/checkServerConfig.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",
