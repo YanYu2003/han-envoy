@@ -285,3 +285,34 @@ export async function handler(req, res) {
 ```
 
 > **注意：** 上述参考实现仅用作架构说明，本项目中未实现真实后端代理。实际部署时请参考此设计自行实现。
+
+---
+
+## 9. Phase 4.5：本地 Express 代理 Demo
+
+Phase 4.5 已实现一个最小可用的本地 Express AI Proxy，位于 `server/` 目录。
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| Express 服务器 | `server/aiProxyServer.ts` | POST /api/ai，支持 parse/react 两个 task |
+| AI Client | `server/aiClient.ts` | 调用 OpenAI-compatible Chat Completions 接口 |
+| 服务端 Prompt | `server/serverPrompts.ts` | 含 context 的 System/User Prompt |
+| Schema 校验 | `server/schemas.ts` | sanitizeParseResponse / sanitizeReactionResponse |
+| 环境变量示例 | `.env.server.example` | 服务端环境变量（API Key 仅在此处配置） |
+
+### 快速启动
+
+```bash
+cp .env.server.example .env.server
+# 编辑 .env.server 填入 AI_API_KEY
+npm run server:dev
+```
+
+### 前端配置
+
+```bash
+VITE_AI_PLAY_MODE=realAI
+VITE_AI_PROXY_URL=http://localhost:8787/api/ai
+```
+
+详见 [`server/README.md`](../server/README.md)。

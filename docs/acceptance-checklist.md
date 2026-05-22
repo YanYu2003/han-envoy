@@ -387,6 +387,47 @@
 
 ---
 
+# Phase 4.5 验收清单
+
+> 逐项检查 Phase 4.5 完成情况
+
+## 1. 服务端代理
+
+- [ ] `server/aiProxyServer.ts` — Express 服务器已实现
+- [ ] `server/aiClient.ts` — AI Client 已实现
+- [ ] `server/serverPrompts.ts` — Prompt 模板已实现
+- [ ] `server/schemas.ts` — 校验与 sanitize 已实现
+- [ ] `server/README.md` — 使用说明已新增
+- [ ] `npm run server:dev` 可启动
+
+## 2. 环境变量安全
+
+- [ ] `.env.server.example` 已新增（不含真实 Key）
+- [ ] `.env.server` 已在 `.gitignore` 中
+- [ ] 真实 API Key 仅存储于服务端
+
+## 3. 代理功能
+
+- [ ] parse task 已实现
+- [ ] react task 已实现
+- [ ] schema 校验已实现
+- [ ] 非法 task 返回 400
+- [ ] 缺少 API Key 返回 500
+
+## 4. 前端兼容性
+
+- [ ] mock 模式仍可用
+- [ ] presetOnly 仍隐藏自由输入
+- [ ] realAI 无代理时 fallback 到 mock
+- [ ] `npm run build` 通过
+
+## 5. 文档
+
+- [ ] docs 已全部更新
+- [ ] README.md 未被覆盖
+
+---
+
 **验收结论：** _______________
 
 **签名：** _______________

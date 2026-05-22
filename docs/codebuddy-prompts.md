@@ -161,6 +161,31 @@
 
 ---
 
+## Phase 4.5（已完成）
+
+### 目标：最小 AI Proxy Demo
+
+**Prompt 标题：Phase 4.5 最小 AI Proxy Demo**
+
+**输出：**
+- **新增文件：**
+  - `server/aiProxyServer.ts` — Express 代理服务器（POST /api/ai，parse/react 两个 task）
+  - `server/aiClient.ts` — OpenAI-compatible 调用封装（含 JSON 提取）
+  - `server/serverPrompts.ts` — 服务端 Prompt 模板（含 context 参数化）
+  - `server/schemas.ts` — 校验与 sanitize（intent/tone/target 枚举校验，sanitizeParseResponse）
+  - `server/README.md` — 服务端使用说明
+  - `.env.server.example` — 服务端环境变量示例（API Key 仅限此处）
+- **修改文件：**
+  - `package.json` — 新增 `server:dev` 脚本
+  - `.gitignore` — 新增 `.env.server` `.env.server.local`
+  - `docs/ai-proxy-design.md` — 新增 Phase 4.5 章节
+  - `docs/ai-agent-design.md` — 新增 Phase 4.5 文件说明
+  - `docs/codebuddy-prompts.md` — 记录本阶段
+  - `docs/acceptance-checklist.md` — 追加 Phase 4.5 验收清单
+- **不变：** 前端 mock/presetOnly 模式、预设选项、规则系统
+
+---
+
 ## 使用提示
 
 - 每个新 Phase 请在此文件末尾追加新的 Prompt 记录

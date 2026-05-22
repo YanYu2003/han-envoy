@@ -414,3 +414,8 @@ Mock Parser 仍然**不是**可靠的自然语言理解系统：
 | `src/ai/remoteAiProvider.ts` | 远程 AI Provider（安全代理客户端） |
 | `src/ai/prompts.ts` | 真实 AI Prompt 模板 |
 | `docs/ai-proxy-design.md` | AI 代理接口设计文档 |
+| `server/aiProxyServer.ts` | Phase 4.5 本地 Express AI Proxy |
+| `server/aiClient.ts` | OpenAI-compatible API Client |
+| `server/serverPrompts.ts` | 服务端 Prompt 模板 |
+| `server/schemas.ts` | JSON 校验与 sanitize |
+| `.env.server.example` | 服务端环境变量示例（API Key 仅限此处） |
