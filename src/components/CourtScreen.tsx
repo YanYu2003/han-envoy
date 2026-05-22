@@ -24,8 +24,8 @@ export function CourtScreen() {
   const [lastAnalysis, setLastAnalysis] = useState<PlayerActionAnalysis | null>(null);
   const [lastReactions, setLastReactions] = useState<CharacterReaction[]>([]);
   const [lastFreeInput, setLastFreeInput] = useState("");
+  const [freeInputError, setFreeInputError] = useState("");
 
-  // AI 模式（从环境变量读取，支持 presetOnly / mock / realAI）
   const aiMode = getAIPlayMode();
 
   const scene = SCENES[currentSceneId];
@@ -45,6 +45,7 @@ export function CourtScreen() {
 
   const handleFreeInput = async (input: string) => {
     setFreeInputLoading(true);
+    setFreeInputError("");
     try {
       await makeFreeInput(input);
       const newLog = useGameStore.getState().aiLog;
@@ -54,6 +55,10 @@ export function CourtScreen() {
         setLastReactions(latest.reactions);
         setLastFreeInput(latest.input);
       }
+    } catch {
+      setFreeInputError(
+        "AI 响应失败，请稍后重试；如已启用 fallback，系统会尝试降级处理。"
+      );
     } finally {
       setFreeInputLoading(false);
     }
@@ -96,11 +101,12 @@ export function CourtScreen() {
               onChoose={makeChoice}
             />
 
-            {/* Phase 3.1: Free input with AI mode */}
             <FreeInputBox
               loading={freeInputLoading}
               aiMode={aiMode}
               onSubmit={handleFreeInput}
+              errorMessage={freeInputError}
+              onClearError={() => setFreeInputError("")}
             />
 
             {(lastAnalysis || lastReactions.length > 0) && (
