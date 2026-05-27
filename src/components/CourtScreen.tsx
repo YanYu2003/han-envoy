@@ -14,6 +14,7 @@ import type { PlayerActionAnalysis, CharacterReaction } from "../ai/types";
 export function CourtScreen() {
   const currentSceneId = useGameStore((s) => s.currentSceneId);
   const stats = useGameStore((s) => s.stats);
+  const lastDelta = useGameStore((s) => s.lastDelta);
   const turn = useGameStore((s) => s.turn);
   const history = useGameStore((s) => s.history);
   const eventLog = useGameStore((s) => s.eventLog);
@@ -119,7 +120,7 @@ export function CourtScreen() {
           </section>
 
           <aside className="lg:w-56 shrink-0 order-2 lg:order-3 space-y-6">
-            <StatPanel stats={stats} />
+            <StatPanel stats={stats} lastDelta={lastDelta} />
             <HistoryLog history={history} eventLog={eventLog} />
           </aside>
         </div>

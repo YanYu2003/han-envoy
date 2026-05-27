@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import type { GameStats } from "../game/types";
 
 interface Props {
   stats: GameStats;
+  /** Phase 7 最小下一步: 上一回合的参数增量(用于浮字显示) */
+  lastDelta?: Partial<GameStats>;
 }
 
 const STAT_CONFIG: { key: keyof GameStats; label: string; color: string }[] = [
@@ -17,7 +20,24 @@ const STAT_CONFIG: { key: keyof GameStats; label: string; color: string }[] = [
   { key: "historianScore", label: "史评", color: "bg-blue-700" },
 ];
 
-export function StatPanel({ stats }: Props) {
+const FLOAT_DURATION_MS = 1800;
+
+export function StatPanel({ stats, lastDelta }: Props) {
+  const [visibleDelta, setVisibleDelta] = useState<Partial<GameStats> | undefined>(
+    undefined
+  );
+
+  // 每当 lastDelta 引用变化(Zustand 每次 setState 都是新对象),触发浮字
+  useEffect(() => {
+    if (!lastDelta) return;
+    const keys = Object.keys(lastDelta) as (keyof GameStats)[];
+    const hasChange = keys.some((k) => (lastDelta[k] ?? 0) !== 0);
+    if (!hasChange) return;
+    setVisibleDelta(lastDelta);
+    const t = setTimeout(() => setVisibleDelta(undefined), FLOAT_DURATION_MS);
+    return () => clearTimeout(t);
+  }, [lastDelta]);
+
   return (
     <div className="space-y-1.5">
       <h3 className="text-han-gold/60 text-xs tracking-widest uppercase mb-2">
@@ -25,6 +45,7 @@ export function StatPanel({ stats }: Props) {
       </h3>
       {STAT_CONFIG.map(({ key, label, color }) => {
         const value = stats[key];
+        const d = visibleDelta?.[key] ?? 0;
         return (
           <div key={key} className="flex items-center gap-2 text-xs">
             <span className="w-8 text-han-gold/70 text-right shrink-0">
@@ -38,6 +59,18 @@ export function StatPanel({ stats }: Props) {
             </div>
             <span className="w-7 text-han-gold/80 text-right font-mono">
               {value}
+            </span>
+            <span
+              className={`w-10 text-right font-mono text-[11px] leading-none transition-opacity duration-500 ${
+                d === 0
+                  ? "opacity-0"
+                  : d > 0
+                  ? "text-emerald-400 opacity-100 animate-pulse"
+                  : "text-rose-400 opacity-100 animate-pulse"
+              }`}
+              aria-hidden={d === 0}
+            >
+              {d === 0 ? "" : d > 0 ? `+${d}` : `${d}`}
             </span>
           </div>
         );
