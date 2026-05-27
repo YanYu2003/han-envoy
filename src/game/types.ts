@@ -135,4 +135,6 @@ export interface GameState {
   endingTriggerReason?: string;
   /** Phase 3: AI 交互日志 */
   aiLog: AIInteractionLogEntry[];
+  /** Phase 7 最小下一步: 上一回合的参数增量(用于 StatPanel +N 浮字) */
+  lastDelta?: Partial<GameStats>;
 }

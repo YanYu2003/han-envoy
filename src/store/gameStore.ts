@@ -17,6 +17,7 @@ import {
 } from "../game/thresholdEvents";
 import { getEndingTriggerReason } from "../game/endings";
 import { resolveCrisisEnding, resolveAssassinationEnding } from "../game/scenes";
+import { nextSceneByIntent } from "../game/sceneRouter";
 import { getAIPlayMode } from "../ai/aiMode";
 import { getAIProvider } from "../ai/aiProviderFactory";
 import { analysisToEffects } from "../ai/analysisToEffects";
@@ -50,6 +51,7 @@ function createInitialState(): GameState {
     endingId: undefined,
     endingTriggerReason: undefined,
     aiLog: [],
+    lastDelta: undefined,
   };
 }
 
@@ -98,6 +100,8 @@ interface TurnOutput {
   newEventLog: EventLogEntry[];
   newTriggeredIds: string[];
   resolvedEndingId: string | undefined;
+  /** Phase 7: 本回合参数增量(供 StatPanel 浮字使用) */
+  delta: Partial<GameStats>;
 }
 
 function resolveTurn(
@@ -152,7 +156,7 @@ function resolveTurn(
     resolvedEndingId = input.resolveEndingFn(newStats, state.turn) ?? undefined;
   }
 
-  return { newStats, entry, newEventLog, newTriggeredIds, resolvedEndingId };
+  return { newStats, entry, newEventLog, newTriggeredIds, resolvedEndingId, delta };
 }
 
 /* ================================================================
@@ -236,23 +240,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ? "通译迟疑片刻，似乎未能理解你的意思。请换一种更明确的说法。"
       : `你开口说道：「${input.length > 40 ? input.slice(0, 40) + "…" : input}」`;
 
-    // 4) 判定结局逻辑
+    // 4) 判定结局逻辑 — Phase 7 最小下一步: 通过 sceneRouter 决策
+    const route = nextSceneByIntent(
+      state.currentSceneId,
+      analysis.intent,
+      state.stats
+    );
     let resolveEndingFn: ((stats: GameStats, turn: number) => string | null) | undefined;
-    let nextSceneId: string | undefined;
-
-    if (analysis.intent === "assassinate") {
+    let nextSceneId: string | undefined = route.nextSceneId;
+    if (route.forceEndingResolver === "assassination") {
       resolveEndingFn = resolveAssassinationEnding;
-    } else if (state.currentSceneId === "crisis_point") {
+    } else if (route.forceEndingResolver === "crisis") {
       resolveEndingFn = resolveCrisisEnding;
-    } else {
-      // 正常推进到下一场景
-      const sceneIds = Object.keys(SCENES);
-      const currentIdx = sceneIds.indexOf(state.currentSceneId);
-      nextSceneId =
-        currentIdx >= 0 && currentIdx < sceneIds.length - 1
-          ? sceneIds[currentIdx + 1]
-          : undefined;
     }
+    console.log(`[HanEnvoy/sceneRouter] ${route.reason}`);
 
     // 5) 执行结算管线
     const output = resolveTurn(state, {
@@ -298,7 +299,7 @@ function applyTurnOutcome(
   nextSceneId?: string,
   additional: Partial<GameState> = {}
 ) {
-  const { newStats, entry, newEventLog, newTriggeredIds, resolvedEndingId } =
+  const { newStats, entry, newEventLog, newTriggeredIds, resolvedEndingId, delta } =
     output;
 
   const base: Partial<GameState> = {
@@ -306,6 +307,7 @@ function applyTurnOutcome(
     history: [...state.history, entry],
     eventLog: newEventLog,
     triggeredEvents: newTriggeredIds,
+    lastDelta: delta,
     ...additional,
   };
 

@@ -1,115 +1,123 @@
 # 汉使 Han Envoy
 
-> **持节入胡庭，一言动西域。**  
-> 一款 AI 驱动的汉代外交叙事模拟网页游戏。玩家扮演持节出使西域的汉使，在楼兰原型国的朝堂上与国王、大臣、译者、亲汉派、亲匈奴派展开外交博弈。你的言辞、威慑、妥协、离间、刺王或殉国，都会改变楼兰与大汉的命运。
-
----
-
-## 项目简介
-
-《汉使》（英文名：**Han Envoy**）是一个为 **“AI CAN DO IT｜腾讯云黑客松 游戏开发挑战赛”** 开发的网页游戏原型，报名方向倾向于 **赛题三：叙事类游戏**。
-
-本项目的目标不是做一份“历史科普作业”，而是做一个真正可玩的 AI 叙事游戏原型：
-
-- 玩家不是旁观历史，而是以“汉使”身份进入异国朝堂；
-- AI 不是简单聊天 NPC，而是参与核心玩法循环；
-- 结果不完全交给大模型，而是由硬规则系统约束；
-- 汉代外交文化不是美术贴皮，而是体现在持节、汉威、礼法、质子、册封、使节名节、战争借口和史官评价等机制中。
-
-一句话概括：
-
-> **AI 负责让朝堂活起来，规则负责让外交有代价。**
+> **持节入胡庭，一言动西域。**
+>
+> 一个 AI 辅助的汉代外交叙事模拟游戏原型。玩家扮演出使西域的汉使，在楼兰原型国的王庭上，用威慑、通商、问罪、离间、忍让、刺王或殉国改变朝堂局势。
 
 ---
 
 ## 当前状态
 
-| 项目 | 状态 |
-|---|---|
-| 当前阶段 | Phase 0：项目定版与工程骨架 |
-| 游戏内容 | 第一章：楼兰原型国朝堂外交 |
-| 可玩性 | 当前仅为工程骨架与静态页面，完整玩法尚未实现 |
-| AI 接入 | 暂未接入真实 AI API |
-| 规则系统 | 已在文档中设计，尚未代码实现 |
-| 目标平台 | 可独立运行的网页游戏原型 |
-| 仓库名 | `han-envoy` |
+《汉使》最初为 **AI CAN DO IT｜腾讯云黑客松 游戏开发挑战赛** 的叙事游戏原型而启动；现在项目已经超过最早 README 中的 Phase 0 设想，进入“可玩 Demo + AI 工程化扩展”的阶段。
 
-Phase 0 的重点是：明确项目方向、MVP 边界、AI 与硬规则的职责划分、工程目录结构和后续开发路线。
+当前版本已经具备：
 
----
-
-## 参赛定位
-
-本项目面向 **叙事类游戏** 方向，核心展示点包括：
-
-1. **AI 驱动的动态叙事**
-   - AI 解析玩家自由输入；
-   - AI 生成国王、大臣、译者和派系的动态反应；
-   - AI 根据最终局势生成具有史书风格的结局文案。
-
-2. **硬规则约束的外交模拟**
-   - 游戏不让大模型直接决定胜负；
-   - 参数变化、事件触发和结局判定由规则系统负责；
-   - AI 的输出必须被游戏状态和角色设定约束。
-
-3. **文化机制化**
-   - “汉威”“持节”“使节名节”“质子”“册封”“战争借口”“史官评价”等元素不是背景装饰，而是参与玩法结算的系统参数。
-
----
-
-## 核心体验
-
-玩家进入楼兰朝堂后，可以通过预设选项或自由输入进行外交行动，例如：
-
-- 以汉威震慑楼兰王；
-- 许以贸易和册封利益；
-- 指责楼兰反复无信；
-- 离间亲匈奴大臣；
-- 要求送质子入汉；
-- 忍让周旋以保全任务；
-- 羞辱敌方派系制造冲突；
-- 冒险刺王并改立亲汉新王；
-- 以死明志，为汉朝取得出兵借口。
-
-本项目的一个核心设计点是：
-
-> **死亡不一定是失败。**
-
-如果玩家死得有价值，可能触发汉朝出兵、灭国、改立新王、封赏子孙或史官赞誉。  
-但如果玩家只是无脑狂妄，也可能变成“无功无名地死在异邦”。
-
----
-
-## MVP 范围
-
-第一版 MVP 只做一个国家：**楼兰原型国**。
-
-### MVP 包含
-
-- 一个完整的楼兰朝堂外交场景；
-- 汉使、楼兰王、亲汉派、亲匈奴派、译者等核心角色；
+- React + TypeScript + Vite + Tailwind + Zustand 的前端工程；
+- 一个楼兰王庭朝堂篇章，包含 4 个主要场景和多条预设路线；
+- 10 维外交参数系统，数值范围统一钳制在 0-100；
+- 阈值事件、连锁反应、动态叙事片段和 5 类结局；
 - 预设选项与自由输入两种玩家行动方式；
-- AI 辅助解析玩家输入；
-- 硬规则参数系统；
-- 多个可触发结局；
-- 史官评价与结局文案；
-- 可部署、可演示的网页游戏原型。
+- `presetOnly` / `mock` / `realAI` 三档 AI 模式；
+- Mock AI 意图解析、角色反应生成，以及真实 AI 代理的本地 Express 方案；
+- 服务端 schema sanitize，避免模型输出直接污染游戏状态；
+- 自由输入意图路由和参数变化浮字反馈。
 
-### MVP 暂不包含
+项目仍然是原型，不是完整商业游戏。当前主要短板是：篇章较短、NPC 没有长期记忆、场景流转仍未升级为显式剧情图、自动化测试不足、部署和演示包装还未完成。
 
-- 多国家系统；
-- 大地图探索；
-- 战斗系统；
-- 复杂养成系统；
-- 多人联机；
-- 账号系统；
-- 数据库存档；
-- 完整开放世界；
-- 大量美术与动画资源。
+一句话概括当前设计：
 
-MVP 的原则是：
+> **AI 负责理解与表达，规则负责裁判与结算。**
 
-> **先把一个朝堂做深，不要把十个国家做空。**
+---
+
+## 最新改动
+
+最近一次功能改动是 **Intent Routing & Stat Delta Feedback**，建议在后续主线记录中视为 **Phase 5：交互后果可见化**。
+
+它解决了两个早期问题：
+
+1. 自由输入不再只是“解析后顺序推进”。`src/game/sceneRouter.ts` 会根据玩家意图决定是否继续、跳到危机点，或直接进入刺王/危机结局判定。
+2. 每次行动后的参数变化会显示在右侧状态栏，例如 `+10`、`-5`，让玩家看到自然语言如何影响局势。
+
+注意：`docs/change-log-2026-05-intent-routing.md` 中把这次改动称为“Phase 7 最小下一步”。那是某次 AI 体检报告中的局部编号。README 从现在起使用下面的“主线阶段表”作为对外和 review 的参考，旧 docs 保持为历史记录。
+
+---
+
+## 本地运行
+
+建议环境：
+
+- Node.js 20+
+- npm 10+
+
+安装依赖：
+
+```bash
+npm install
+```
+
+启动开发服务器：
+
+```bash
+npm run dev
+```
+
+Vite 默认会输出本地访问地址，通常是：
+
+```text
+http://localhost:5173/
+```
+
+构建：
+
+```bash
+npm run build
+```
+
+检查服务端 AI 代理配置：
+
+```bash
+npm run server:check
+```
+
+启动本地 AI 代理：
+
+```bash
+npm run server:dev
+```
+
+---
+
+## AI 模式
+
+复制环境变量示例：
+
+```bash
+cp .env.example .env
+cp .env.server.example .env.server
+```
+
+前端 AI 模式由 `.env` 中的 `VITE_AI_PLAY_MODE` 控制：
+
+| 模式 | 说明 |
+|---|---|
+| `presetOnly` | 只使用预设选项，隐藏自由输入 |
+| `mock` | 默认开发模式，本地关键词/规则模拟 AI |
+| `realAI` | 通过后端代理调用真实模型，失败时可 fallback 到 mock |
+
+真实 API Key 不应放入任何 `VITE_` 变量。Vite 会把 `VITE_` 变量打进浏览器端 bundle。真实密钥请放在 `.env.server`，由 `server/aiProxyServer.ts` 读取。
+
+---
+
+## 手动测试
+
+默认 `mock` 模式下，不需要真实模型即可测试核心流程。
+
+1. 打开本地页面并开始游戏。
+2. 走一条预设路线，例如“陈汉威 → 宣示汉威 → 支持亲汉派 → 以兵威慑”。预期：流程正常进入结局，右侧参数出现短暂 `+N` / `-N` 反馈。
+3. 重开后测试自由输入：“我愿与楼兰互市通商”。预期：Mock AI 识别为谈判/通商，场景正常推进，并显示参数变化。
+4. 重开后测试高风险输入：“我要刺杀楼兰王”或“我握短刃刺王”。预期：不再普通推进，而是直接进入刺王结局判定。
+5. 测试不明确输入：“啊啊啊”。预期：通译提示不理解，参数通常不变；系统仍保留兜底推进。
 
 ---
 
@@ -120,108 +128,35 @@ MVP 的原则是：
     ↓
 玩家选择预设行动或输入自由发言
     ↓
-AI 解析玩家意图、语气、目标和风险
+AI Provider 解析玩家意图、语气、目标和风险
     ↓
-硬规则系统更新外交参数
+analysisToEffects 将结构化分析映射为参数增量
     ↓
-AI 生成各角色反应和朝堂辩论
+规则系统结算参数、连锁反应和阈值事件
     ↓
-系统判断是否触发事件或结局
+角色反应生成
     ↓
-进入下一轮外交回合
+sceneRouter 决定下一场景或结局判定
+    ↓
+UI 展示朝堂文本、角色反应、参数变化和历史记录
 ```
-
-AI 负责“理解与表达”，规则系统负责“裁判与结算”。
 
 ---
 
-## 核心参数系统
+## 核心参数
 
-游戏计划使用一组 0–100 范围内的外交参数表示当前局势。
-
-| 参数名 | 中文名 | 含义 |
+| 参数 | 中文名 | 含义 |
 |---|---|---|
-| `hanPrestige` | 汉威 | 汉朝在楼兰朝堂中的威慑力与权威感 |
+| `hanPrestige` | 汉威 | 汉朝在楼兰朝堂中的权威与威慑 |
 | `xiongnuPressure` | 胡压 | 匈奴对楼兰的外部压力 |
-| `kingAnger` | 王怒 | 楼兰王对汉使的愤怒程度 |
-| `kingFear` | 王惧 | 楼兰王对汉朝报复的恐惧程度 |
-| `proHan` | 亲汉派 | 楼兰朝中亲汉势力的影响力 |
-| `proXiongnu` | 亲胡派 | 楼兰朝中亲匈奴势力的影响力 |
-| `tradeAccess` | 商道通行 | 丝路商道的开放与安全程度 |
-| `casusBelli` | 战争借口 | 汉朝出兵问罪的政治与道义理由 |
-| `envoyHonor` | 使节名节 | 玩家作为汉使的个人气节与名誉 |
-| `historianScore` | 史官评价 | 后世史官对玩家行为的总体评价 |
-
-这些参数将共同影响：
-
-- 朝堂角色态度；
-- 外交事件触发；
-- 刺王或政变成功率；
-- 玩家是否能活着归汉；
-- 玩家死亡后是否仍能取得战略胜利；
-- 最终结局与史官评价。
-
----
-
-## AI 设计边界
-
-本项目会使用 AI Agent，但不会让 AI 失控地决定游戏结果。
-
-### AI 负责
-
-- 解析玩家自由输入；
-- 判断玩家意图、语气、目标和风险等级；
-- 生成角色动态反应；
-- 生成朝堂辩论文本；
-- 生成结局文案和史官评价；
-- 在固定世界观和角色设定内丰富叙事表现。
-
-### AI 不负责
-
-- 不直接修改游戏参数；
-- 不直接决定胜负；
-- 不绕过硬规则触发结局；
-- 不擅自新增国家、角色或系统；
-- 不替代规则引擎；
-- 不保存或暴露 API Key。
-
-推荐架构：
-
-```text
-玩家输入
-    ↓
-AI 解析层
-    ↓
-结构化 JSON
-    ↓
-硬规则引擎
-    ↓
-游戏状态更新
-    ↓
-AI 叙事生成层
-    ↓
-角色反应 / 朝堂辩论 / 结局文案
-```
-
-详细设计见：
-
-- [`docs/ai-agent-design.md`](./docs/ai-agent-design.md)
-- [`docs/game-design.md`](./docs/game-design.md)
-
----
-
-## 技术栈
-
-| 技术 | 用途 |
-|---|---|
-| React | 前端 UI |
-| TypeScript | 类型安全 |
-| Vite | 开发与构建工具 |
-| Tailwind CSS | 样式系统 |
-| Zustand | 后续状态管理 |
-| AI Provider Abstraction | 后续 AI 接入抽象层 |
-
-当前 Phase 0 只提供工程骨架和文档。完整游戏逻辑、状态管理、规则系统和 AI Provider 将在后续阶段逐步实现。
+| `kingAnger` | 王怒 | 楼兰王对汉使的愤怒 |
+| `kingFear` | 王惧 | 楼兰王对汉朝报复的恐惧 |
+| `proHan` | 亲汉派 | 楼兰朝中亲汉势力影响力 |
+| `proXiongnu` | 亲胡派 | 楼兰朝中亲匈奴势力影响力 |
+| `tradeAccess` | 商道通行 | 丝路商道开放与安全程度 |
+| `casusBelli` | 兵衅 | 汉朝出兵问罪的政治理由 |
+| `envoyHonor` | 使节名节 | 玩家作为汉使的个人气节 |
+| `historianScore` | 史官评价 | 后世对玩家行为的评价 |
 
 ---
 
@@ -231,251 +166,123 @@ AI 叙事生成层
 han-envoy/
 ├── README.md
 ├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── index.html
-├── .gitignore
-├── .env.example
-├── docs/
-│   ├── phase-0-plan.md
-│   ├── game-design.md
-│   ├── ai-agent-design.md
-│   ├── historical-notes.md
-│   ├── codebuddy-prompts.md
-│   └── acceptance-checklist.md
-├── public/
-│   └── assets/
-│       ├── images/
-│       ├── audio/
-│       └── icons/
-└── src/
-    ├── main.tsx
-    ├── App.tsx
-    ├── index.css
-    ├── ai/
-    ├── components/
-    ├── game/
-    ├── store/
-    ├── styles/
-    └── utils/
+├── server/
+│   ├── aiProxyServer.ts
+│   ├── aiClient.ts
+│   ├── checkServerConfig.ts
+│   └── schemas.ts
+├── src/
+│   ├── ai/
+│   │   ├── aiMode.ts
+│   │   ├── aiProviderFactory.ts
+│   │   ├── analysisToEffects.ts
+│   │   ├── mockAiProvider.ts
+│   │   └── remoteAiProvider.ts
+│   ├── components/
+│   ├── game/
+│   │   ├── scenes.ts
+│   │   ├── endings.ts
+│   │   ├── simpleRules.ts
+│   │   ├── thresholdEvents.ts
+│   │   ├── chainReactions.ts
+│   │   └── sceneRouter.ts
+│   ├── store/
+│   │   └── gameStore.ts
+│   └── utils/
+└── docs/
 ```
 
 ---
 
-## 本地运行
+## 文档说明
 
-### 环境要求
+`docs/` 目录保留了不同 AI 工具和不同开发阶段留下的设计、验收、审查和变更记录。它们非常有价值，但不是每一份都代表“当前唯一计划”。
 
-建议使用：
+阅读优先级建议：
 
-- Node.js 20+
-- npm 10+
+| 文档 | 当前用途 |
+|---|---|
+| `README.md` | 当前对外说明、运行方式、主线规划，以此为 review 入口 |
+| `docs/change-log-2026-05-intent-routing.md` | 最近一次 intent routing / stat delta 改动记录 |
+| `docs/audit-report-2026-05.md` | 2026-05 的大型项目体检与后续建议 |
+| `docs/ai-agent-design.md` | AI 边界、Provider、Mock/Real AI 架构背景 |
+| `docs/ai-proxy-design.md` | 后端代理与 API Key 安全方案 |
+| `docs/game-design.md` | 玩法、参数、角色和结局的早期设计 |
+| `docs/act-0-design.md` | 入朝前准备阶段的设计草案，尚未接入主流程 |
+| `docs/acceptance-checklist.md` | 各历史阶段验收记录 |
+| `docs/codebuddy-prompts.md` | AI 协作 prompt 记录 |
+| `docs/phase-0-plan.md` | 项目启动阶段记录，已过时但保留 |
 
-### 克隆仓库
-
-```bash
-git clone https://github.com/YanYu2003/han-envoy.git
-cd han-envoy
-```
-
-### 安装依赖
-
-```bash
-npm install
-```
-
-### 启动开发服务器
-
-```bash
-npm run dev
-```
-
-默认访问地址：
-
-```text
-http://localhost:3000
-```
-
-### 构建生产版本
-
-```bash
-npm run build
-```
-
-### 预览构建结果
-
-```bash
-npm run preview
-```
+如果文档之间出现 Phase 编号冲突，以 README 的“主线阶段表”为准；历史文档不建议重写，除非追加明确的补充说明。
 
 ---
 
-## 环境变量
+## 主线阶段表
 
-复制示例环境变量文件：
+下面是从当前状态重新整理后的阶段规划。早期 docs 中的 Phase 名称可能与此表不完全一致。
 
-```bash
-cp .env.example .env
-```
+| 阶段 | 状态 | 内容 |
+|---|---|---|
+| Phase 0 | 已完成 | 项目定版、工程骨架、MVP 边界、设计文档 |
+| Phase 1 | 已完成 | 静态可玩原型、开始界面、朝堂 UI、预设选项 |
+| Phase 2 | 已完成 | 参数系统、规则结算、回合历史、结局判定 |
+| Phase 2.5 | 已完成设计 | Act 0 入朝前准备阶段设计与类型预留，尚未接入 |
+| Phase 3 | 已完成 | Mock AI Provider、自由输入、角色反应 |
+| Phase 3.1 | 已完成 | Mock Parser 修正、AI 模式开关 |
+| Phase 4 | 已完成设计 | 真实 AI 接入架构、安全边界、代理方案 |
+| Phase 4.5 | 已完成 | 本地 Express AI 代理、schema sanitize、realAI fallback |
+| Phase 5 | 当前 | 自由输入意图路由、参数变化浮字、交互后果可见化 |
+| Phase 6 | 建议下一步 | 自动化测试、sceneRouter 表驱动测试、基础回归用例 |
+| Phase 7 | 建议下一步 | 显式场景图，将 `Object.keys(SCENES)` 兜底替换为 transitions |
+| Phase 8 | 规划中 | NPC 运行时状态、短期记忆、态度和派系关系 |
+| Phase 9 | 规划中 | Act 0 入朝前准备阶段接入主流程 |
+| Phase 10 | 规划中 | Demo 包装、部署、录屏、作品集说明 |
+| Phase 11+ | 开放 | 多国家、多章节、存档、叙事调试工具、可观测性 |
 
-示例内容：
-
-```env
-VITE_AI_PROVIDER=
-VITE_AI_API_BASE_URL=
-VITE_AI_API_KEY=
-VITE_GAME_VERSION=0.1.0
-```
+Phase 编号是协作索引，不是硬性边界。后续 review 应优先关注当前代码事实和本表，而不是早期 README 中“只到 Phase 5”的旧计划。
 
 ---
 
-## API Key 安全说明
+## 近期建议
 
-本项目是前端网页游戏，因此必须特别注意 API Key 安全。
+优先级较高的下一步：
 
-### 重要提醒
+1. 给 `sceneRouter.ts` 增加表驱动测试，覆盖刺杀、殉国、屈服、强硬跳危机点和兜底推进。
+2. 将场景推进从 `Object.keys(SCENES)` 升级为显式 `transitions`，降低剧情扩展风险。
+3. 给 Mock AI 的 28 条测试样例接入自动化测试。
+4. 做一个最小 Debug Panel，展示最近一次 AI analysis、effects、route reason 和 delta。
+5. 再考虑 NPC 记忆与 Act 0，不要在场景图尚未稳定时大改角色系统。
 
-在 Vite 项目中，所有以 `VITE_` 开头的环境变量，都可能被打包进浏览器端代码。
+---
 
-这意味着：
+## 安全说明
 
-> **不要把真正需要保密的生产 API Key 直接放在前端 `.env` 文件中。**
-
-即使变量名叫 `VITE_AI_API_KEY`，它也不能被视为安全的后端密钥。
-
-### 当前阶段原则
-
-Phase 0 / Phase 1 阶段建议：
-
-- 优先使用 Mock AI；
-- 不接入真实大模型 API；
-- 不在仓库中提交任何真实 Key；
-- 不在截图、Demo、日志或文档中展示真实 Key。
-
-### 后续真实 AI 接入建议
-
-如果后续接入腾讯混元、OpenAI、DeepSeek 或其他大模型 API，推荐采用：
-
-```text
-前端页面
-    ↓
-后端代理 / Serverless Function / Cloud Function
-    ↓
-真实 AI Provider
-```
-
-真实 API Key 应保存在服务端环境变量中，而不是前端代码中。
-
-### 提交前安全检查
-
-提交前建议执行：
+提交前建议检查：
 
 ```bash
 git status
 git diff --cached
 ```
 
-可选地搜索敏感字段：
+不要提交：
 
-```bash
-grep -R "sk-" . --exclude-dir=node_modules --exclude-dir=dist
-grep -R "api_key\|apikey\|secret\|token" . --exclude-dir=node_modules --exclude-dir=dist
-```
+- `.env`
+- `.env.server`
+- 真实 API Key
+- 本地日志中的敏感凭据
+- `node_modules/`
+- `dist/`，除非明确需要发布静态产物
 
-提交前确认：
-
-- [ ] 没有提交 `.env`
-- [ ] 没有提交真实 API Key
-- [ ] 没有在 README 或 docs 中写入真实凭据
-- [ ] 没有在截图、日志或 Demo 文件中暴露 Key
-- [ ] `.codebuddy/` 等本地 AI 工具缓存没有被提交
-- [ ] 真实 AI 调用不直接暴露生产密钥到浏览器端
-
-### 如果 Key 已经泄露
-
-如果不小心提交了真实 API Key：
-
-1. 立即前往服务商控制台禁用或删除该 Key；
-2. 创建新的 Key；
-3. 从代码和文档中移除泄露内容；
-4. 检查服务商账单与调用日志；
-5. 即使删除仓库或改为私有，也要默认旧 Key 已经失效且不可信。
-
----
-
-## 开发路线
-
-### Phase 0：项目定版与工程骨架
-
-- 创建基础工程；
-- 明确 MVP 范围；
-- 编写设计文档；
-- 确定 AI 与规则系统边界；
-- 准备后续开发目录。
-
-### Phase 1：静态可玩原型
-
-- 开始界面；
-- 朝堂主界面；
-- 角色面板；
-- 参数面板；
-- 预设选项；
-- 基础场景推进；
-- 不接入真实 AI。
-
-### Phase 2：规则系统与结局系统
-
-- 实现核心参数；
-- 实现行动结算；
-- 实现回合日志；
-- 实现结局判定；
-- 实现史官评价。
-
-### Phase 3：Mock AI Agent
-
-- 实现自由输入框；
-- 用 Mock AI 解析玩家输入；
-- 生成模拟角色反应；
-- 跑通“输入 → 解析 → 规则 → 反应”的完整链路。
-
-### Phase 4：真实 AI 接入
-
-- 设计 AI Client；
-- 接入真实 Provider；
-- 处理 JSON 解析失败；
-- 增加 fallback；
-- 设计服务端代理方案，避免前端暴露生产 Key。
-
-### Phase 5：演示包装与比赛提交
-
-- 优化 UI；
-- 完善结局文案；
-- 部署网页；
-- 准备 Demo 视频；
-- 准备作品介绍 PPT；
-- 整理 CodeBuddy 历史对话记录。
-
----
-
-## 文档索引
-
-| 文档 | 说明 |
-|---|---|
-| [`docs/phase-0-plan.md`](./docs/phase-0-plan.md) | Phase 0 项目定版与阶段计划 |
-| [`docs/game-design.md`](./docs/game-design.md) | 游戏玩法、参数、行动、角色与结局设计 |
-| [`docs/ai-agent-design.md`](./docs/ai-agent-design.md) | AI Agent 职责边界、解析结构与 fallback 方案 |
-| [`docs/historical-notes.md`](./docs/historical-notes.md) | 楼兰/鄯善与西汉西域经营的史料灵感笔记 |
-| [`docs/codebuddy-prompts.md`](./docs/codebuddy-prompts.md) | CodeBuddy Prompt 记录与后续阶段占位 |
-| [`docs/acceptance-checklist.md`](./docs/acceptance-checklist.md) | 阶段验收清单 |
+如果真实 Key 已经泄露，应立即去服务商控制台禁用旧 Key，并检查账单和调用日志。
 
 ---
 
 ## 许可证
 
-当前项目仍处于黑客松原型阶段，许可证暂定为：
+当前许可证暂定：
 
 ```text
 TBD
 ```
 
-如果后续决定正式开源，应添加独立的 `LICENSE` 文件，并在此处更新许可证说明。
+正式开源前应补充独立 `LICENSE` 文件。
