@@ -20,7 +20,8 @@
 - `presetOnly` / `mock` / `realAI` 三档 AI 模式；
 - Mock AI 意图解析、角色反应生成，以及真实 AI 代理的本地 Express 方案；
 - 服务端 schema sanitize，避免模型输出直接污染游戏状态；
-- 自由输入意图路由和参数变化浮字反馈。
+- 自由输入意图路由和参数变化浮字反馈；
+- Vitest 自动化测试底座，覆盖路由、规则映射、Mock AI 样例和基础规则引擎。
 
 项目仍然是原型，不是完整商业游戏。当前主要短板是：篇章较短、NPC 没有长期记忆、场景流转仍未升级为显式剧情图、自动化测试不足、部署和演示包装还未完成。
 
@@ -72,6 +73,12 @@ http://localhost:5173/
 
 ```bash
 npm run build
+```
+
+运行自动化测试：
+
+```bash
+npm test
 ```
 
 检查服务端 AI 代理配置：
@@ -231,8 +238,8 @@ han-envoy/
 | Phase 3.1 | 已完成 | Mock Parser 修正、AI 模式开关 |
 | Phase 4 | 已完成设计 | 真实 AI 接入架构、安全边界、代理方案 |
 | Phase 4.5 | 已完成 | 本地 Express AI 代理、schema sanitize、realAI fallback |
-| Phase 5 | 当前 | 自由输入意图路由、参数变化浮字、交互后果可见化 |
-| Phase 6 | 建议下一步 | 自动化测试、sceneRouter 表驱动测试、基础回归用例 |
+| Phase 5 | 已完成 | 自由输入意图路由、参数变化浮字、交互后果可见化 |
+| Phase 6 | 当前 | Vitest 测试底座、sceneRouter 表驱动测试、Mock AI 回归样例、规则映射测试 |
 | Phase 7 | 建议下一步 | 显式场景图，将 `Object.keys(SCENES)` 兜底替换为 transitions |
 | Phase 8 | 规划中 | NPC 运行时状态、短期记忆、态度和派系关系 |
 | Phase 9 | 规划中 | Act 0 入朝前准备阶段接入主流程 |
@@ -247,11 +254,10 @@ Phase 编号是协作索引，不是硬性边界。后续 review 应优先关注
 
 优先级较高的下一步：
 
-1. 给 `sceneRouter.ts` 增加表驱动测试，覆盖刺杀、殉国、屈服、强硬跳危机点和兜底推进。
-2. 将场景推进从 `Object.keys(SCENES)` 升级为显式 `transitions`，降低剧情扩展风险。
-3. 给 Mock AI 的 28 条测试样例接入自动化测试。
-4. 做一个最小 Debug Panel，展示最近一次 AI analysis、effects、route reason 和 delta。
-5. 再考虑 NPC 记忆与 Act 0，不要在场景图尚未稳定时大改角色系统。
+1. 将场景推进从 `Object.keys(SCENES)` 升级为显式 `transitions`，降低剧情扩展风险。
+2. 为结局判定、阈值事件和连锁反应继续补测试，扩大 Phase 6 的回归覆盖面。
+3. 做一个最小 Debug Panel，展示最近一次 AI analysis、effects、route reason 和 delta。
+4. 再考虑 NPC 记忆与 Act 0，不要在场景图尚未稳定时大改角色系统。
 
 ---
 

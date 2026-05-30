@@ -53,7 +53,7 @@ const INTENT_RULES: IntentRule[] = [
   // 要求质子
   { keywords: ["质子", "王子入汉", "入朝为质", "送子为质"], intent: "demand_hostage", priority: 60 },
   // 谈判 / 通商
-  { keywords: ["通商", "赏赐", "和好", "互市", "丝绸", "贸易", "商道", "封赏", "厚赏"], intent: "negotiate", priority: 55 },
+  { keywords: ["通商", "赏赐", "和好", "互市", "丝绸", "贸易", "商道", "封赏", "厚赏", "承诺"], intent: "negotiate", priority: 55 },
   // 忍让
   { keywords: ["愿退", "不争", "请恕", "求和", "退让", "息事宁人", "各退一步"], intent: "appease", priority: 50 },
   // 投降（玩家投降类 — 主语必须是"我/汉使"相关）
@@ -190,23 +190,45 @@ function postProcessIntent(
     return "assassinate";
   }
 
-  // 2) 问罪语境优先
+  // 2) 条件威胁句式优先于单个问罪关键词。
+  // 例如"再不交出凶手，汉军便至"应是威慑，而不是单纯问罪。
+  if (isConditionalThreat(lower) && allScores.get("threaten")) {
+    return "threaten";
+  }
+
+  // 3) 明确羞辱语境优先于派系关键词。
+  if (lower.includes("卖国求荣")) {
+    return "insult";
+  }
+
+  // 4) 亲匈/左大将 + 私通语境优先判为离间。
+  const factionKeywords = ["左大将", "亲匈", "匈奴派"];
+  const collusionKeywords = ["私通", "通敌", "暗通", "收受"];
+  if (
+    factionKeywords.some((k) => lower.includes(k)) &&
+    collusionKeywords.some((k) => lower.includes(k))
+  ) {
+    return "divide";
+  }
+
+  // 5) 通商/承诺语境优先判为谈判，避免"归附"被粗暴转成威胁。
+  const negotiationKeywords = ["通商", "互市", "贸易", "商道", "厚赏", "承诺"];
+  if (negotiationKeywords.some((k) => lower.includes(k)) && allScores.get("negotiate")) {
+    return "negotiate";
+  }
+
+  // 6) 问罪语境优先
   const accuseKeywords = ["杀使", "前任", "背约", "血债", "问罪", "凶手", "交代", "偿命", "罪不可赦"];
   if (accuseKeywords.some((k) => lower.includes(k)) && allScores.get("accuse") && allScores.get("accuse")! > 10) {
     return "accuse";
   }
 
-  // 3) 威胁 + 条件句式 → threaten
-  if (isConditionalThreat(lower) && allScores.get("threaten")) {
-    return "threaten";
-  }
-
-  // 4) 否定 appease → threaten
+  // 7) 否定 appease → threaten
   if (rawIntent === "appease" && hasNegation(lower)) {
     return "threaten";
   }
 
-  // 5) 如果只有 unclear 但有内容 → 尝试找次高分
+  // 8) 如果只有 unclear 但有内容 → 尝试找次高分
   if (rawIntent === "unclear" && allScores.size > 0) {
     const sorted = [...allScores.entries()].sort((a, b) => b[1] - a[1]);
     const top = sorted[0];
